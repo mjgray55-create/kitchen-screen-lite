@@ -6,15 +6,15 @@ A kitchen screen for an old tablet. It shows the week's menu, what's in the frid
 
 ## What's in it
 
-| | Basic | Full |
+| | Basic | Expanded |
 |---|---|---|
 | Weekly menu (lunch, dinner, who's cooking, notes) | ✓ | ✓ |
-| Fridge leftovers, with portions and age | ✓ | ✓ |
-| Freezer stock across several freezers | ✓ | ✓ |
+| Meals list the menu picks from | ✓ | ✓ |
+| Shopping list | ✓ | ✓ |
 | Kitchen timers (several at once) | ✓ | ✓ |
+| Fridge and freezer stock, across several freezers | | ✓ |
+| Leftovers: "anything left from last night?", portions, and "Eaten" on the menu | | ✓ |
 | Recipe book, with tap-to-start timers in the steps | | ✓ |
-| Meals list the menu picks from | | ✓ |
-| Shopping list | | ✓ |
 
 The package is chosen in **Settings → What this kitchen has**, and each extra can be switched on or off individually.
 
@@ -23,9 +23,8 @@ The package is chosen in **Settings → What this kitchen has**, and each extra 
 1. On the tablet, install **Fully Kiosk Browser** from the Play Store. Set its Start URL to the site address (below), and turn on *Keep Screen On* and *Start on Boot*.
 2. The screen opens on **Set up this kitchen**. Fill in:
    - **Who cooks:** the household's names, plus options like Takeaway or Eating out.
-   - **Freezers:** a short code and a name for each (e.g. `KF` · Kitchen freezer).
-   - **Freezer headings:** how their freezer list is grouped. A heading with "snack" or "lunch" in its name is offered when picking lunches.
-   - **Package:** Basic or Full, and **Look:** dark or light.
+   - **Freezers** and **Freezer headings** (Expanded only): a short code and a name for each freezer (e.g. `KF` · Kitchen freezer), and how their freezer list is grouped. A heading with "snack" or "lunch" in its name is offered when picking lunches.
+   - **Package:** Basic or Expanded, and **Look:** dark or light.
 3. Tap **Done**, then go to **Settings → Save a backup** once, so the backup step has been tried before you leave.
 
 Settings can be changed later from the Settings tab.

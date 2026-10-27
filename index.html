@@ -479,9 +479,10 @@
    ========================================================= */
 var KEY = 'kitchen.v1';
 var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+/* Basic: menu, meals, shopping, timers.  Expanded adds fridge & freezer stock (with leftovers) and the recipe book. */
 var TIERS = {
-  basic: { recipes: false, meals: false, shopping: false },
-  full: { recipes: true, meals: true, shopping: true }
+  basic: { meals: true, shopping: true, stock: false, recipes: false },
+  expanded: { meals: true, shopping: true, stock: true, recipes: true }
 };
 var DEFAULT_HEADINGS = ['Meat & Fish', 'Ready Meals & Batch Cooking', 'Vegetables & Fruit', 'Snacks, Breakfasts & Lunches', 'Bread & Baking', 'Other'];
 
@@ -522,6 +523,8 @@ function upgrade(d) {
   d = d && typeof d === 'object' ? d : {};
   Object.keys(b).forEach(function (k) { if (d[k] == null) d[k] = b[k]; });
   Object.keys(b.settings).forEach(function (k) { if (d.settings[k] == null) d.settings[k] = b.settings[k]; });
+  if (d.settings.tier === 'full') { d.settings.tier = 'expanded'; if (d.settings.features.stock == null) d.settings.features.stock = true; }
+  if (d.settings.features.stock == null && (d.freezer && d.freezer.items && d.freezer.items.length || (d.fridge || []).length)) d.settings.features.stock = true;
   Object.keys(b.settings.features).forEach(function (k) { if (d.settings.features[k] == null) d.settings.features[k] = b.settings.features[k]; });
   if (!Array.isArray(d.menu) || d.menu.length !== 7) d.menu = b.menu;
   if (!d.freezer.items) d.freezer = b.freezer;
@@ -777,9 +780,9 @@ function applyLook() {
   var dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.classList.toggle('dark', !!dark);
   var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = dark ? '#1b1613' : '#f2ede4';
-  ['recipes', 'meals', 'shopping'].forEach(function (k) {
-    var tab = document.querySelector('.tab[data-page="' + k + '"]'); if (tab) tab.style.display = feat(k) ? '' : 'none';
-    if (!feat(k) && state.page === k) go('menu');
+  [['recipes', 'recipes'], ['meals', 'meals'], ['shopping', 'shopping'], ['freezer', 'stock'], ['fridge', 'stock']].forEach(function (x) {
+    var tab = document.querySelector('.tab[data-page="' + x[0] + '"]'); if (tab) tab.style.display = feat(x[1]) ? '' : 'none';
+    if (!feat(x[1]) && state.page === x[0]) go('menu');
   });
   FCODES = D.settings.freezers.map(function (f) { return f.code; });
   document.title = D.settings.household ? D.settings.household + ' · Kitchen' : 'Kitchen';
@@ -909,6 +912,7 @@ function pickMeal(dayIdx, slot) {
         (n ? '<span class="cnt">' + (kind === 'meal' ? '✓' : '×' + n) + '</span>' : '') + esc(x.name) + '<small>' + esc(sub(x)) + '</small></button>';
     }).join('');
   }
+  if (!feat('stock')) { fridge = []; snacks = []; }
   var fridgeRows = pickRows(fridge, 'leftovers', function (x) { return qtyText(x.portions) + ' portion' + (parseFloat(x.portions) === 1 ? '' : 's') + ' · ' + dayAge(x.date).text; });
   var snackRows = pickRows(snacks, 'freezer', function (x) { return fname(x.f) + ' · ' + qtyText(x.qty) + ' ' + x.unit; });
   var mealRows = feat('meals') ? pickRows(meals, 'meal', function (x) { return x.contents || ''; }) : '';
@@ -916,7 +920,7 @@ function pickMeal(dayIdx, slot) {
     ? group('In the fridge', fridgeRows) + group('Freezer snacks', snackRows) + group('Meals', mealRows)
     : group('Meals', mealRows) + group('In the fridge', fridgeRows) + group('Freezer snacks', snackRows);
 
-  openSheet('<h2>' + esc(d.day) + ' ' + slot + '</h2><p class="sub">Tap everything that\'s on. Tap a leftover twice for two portions.</p>' +
+  openSheet('<h2>' + esc(d.day) + ' ' + slot + '</h2><p class="sub">Tap everything that\'s on.' + (feat('stock') ? ' Tap a leftover twice for two portions.' : '') + '</p>' +
     '<div class="sel" id="selRow"></div>' +
     '<input class="search" id="mealFilter" placeholder="Find…" autocomplete="off" style="margin-top:6px">' +
     '<div class="picklist" id="mealPick">' + (groups || '<p class="empty">Nothing in the fridge or freezer snacks yet — type what\'s on below.</p>') + '</div>' +
@@ -1020,7 +1024,7 @@ function renderLeftoverCard() {
   var box = $('loCard'); if (!box) return;
   var y = (todayIdx() + 6) % 7, d = D.menu[y];
   var meals = parseCell(d && d.dinner).filter(function (x) { return x.kind === 'meal'; });
-  if (!meals.length || /eating out|dining out|eat out/i.test(d.cook || '') || loAnswered()) { box.innerHTML = ''; return; }
+  if (!feat('stock') || !meals.length || /eating out|dining out|eat out/i.test(d.cook || '') || loAnswered()) { box.innerHTML = ''; return; }
   var names = meals.map(function (m) { return m.name; });
   box.innerHTML = '<div class="locard"><div class="q">Anything left from last night?<small>' + esc(d.day) + '\'s dinner — tap how many portions went in the fridge.</small>' +
     meals.map(function (m, i) {
@@ -1087,7 +1091,7 @@ function leftoverAdd() {
         var note = $('lNote').value.trim(); closeSheet();
         act('addLeftover', n, p, note).then(function () { toast(n + ' is in the fridge.'); });
       };
-      setTimeout(function () { $('lName').focus(); }, 50);
+      setTimeout(function () { var f = $('lName'); if (f) f.focus(); }, 50);
     });
 }
 
@@ -1223,7 +1227,7 @@ function recipeForm(r) {
           loadRecipes().then(function () { showRecipe('r' + id); toast(title + (r ? ' saved.' : ' added.')); });
         } catch (e) { toast(e.message, true); }
       };
-      if (!r) setTimeout(function () { $('rTitle').focus(); }, 50);
+      if (!r) setTimeout(function () { var f = $('rTitle'); if (f) f.focus(); }, 50);
     });
 }
 
@@ -1470,13 +1474,13 @@ function freezerItem(row) {
     '<div class="lab">Taking out</div><div class="stepper"><button data-dn>−</button><div class="v" id="amt">' + qtyText(amt) + '</div><button data-up>+</button>' +
     (known ? '<button class="chip" data-all style="width:auto;border-radius:24px;font-size:0.95rem">All of it</button>' : '') + '</div>' +
     '<div class="row"><input class="field" id="useNote" placeholder="What for? (optional — e.g. dinner, with rice)"></div>' +
-    '<button class="check" id="alsoShop"><span class="box"></span>Add to shopping list too</button>' +
+    (feat('shopping') ? '<button class="check" id="alsoShop"><span class="box"></span>Add to shopping list too</button>' : '') +
     '<div class="acts"><button class="btn quiet" data-fix>Correct the count</button><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Take out</button></div>', function (s) {
       function show() { $('amt').textContent = qtyText(amt); }
       s.querySelector('[data-dn]').onclick = function () { amt = Math.max(0.5, amt - (amt > 1 ? 1 : 0.5)); show(); };
       s.querySelector('[data-up]').onclick = function () { amt = amt + (amt < 1 ? 0.5 : 1); if (known) amt = Math.min(amt, have); show(); };
       var all = s.querySelector('[data-all]'); if (all) all.onclick = function () { amt = have; show(); };
-      $('alsoShop').onclick = function () { addShop = !addShop; this.classList.toggle('on', addShop); };
+      if ($('alsoShop')) $('alsoShop').onclick = function () { addShop = !addShop; this.classList.toggle('on', addShop); };
       s.querySelector('[data-x]').onclick = closeSheet;
       s.querySelector('[data-fix]').onclick = function () { fixCount(it); };
       s.querySelector('[data-y]').onclick = function () {
@@ -1529,7 +1533,7 @@ function freezerAdd() {
         var args = [$('aCat').value, name, $('aQty').value.trim(), $('aUnit').value.trim(), f, $('aCom').value.trim()];
         closeSheet(); act.apply(null, ['addFreezer'].concat(args)).then(function () { toast(name + ' is in.'); });
       };
-      setTimeout(function () { $('aName').focus(); }, 50);
+      setTimeout(function () { var f = $('aName'); if (f) f.focus(); }, 50);
     });
 }
 
@@ -1578,7 +1582,7 @@ function mealForm() {
         var a = [n, $('mWhat').value.trim(), $('mRec') ? $('mRec').value : '', $('mNote').value.trim()];
         closeSheet(); act.apply(null, ['addMeal'].concat(a)).then(function () { toast(n + ' added.'); });
       };
-      setTimeout(function () { $('mName').focus(); }, 50);
+      setTimeout(function () { var f = $('mName'); if (f) f.focus(); }, 50);
     });
 }
 
@@ -1622,12 +1626,12 @@ function renderSettings(firstTime) {
         [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Follow the tablet']].map(function (t) { return '<button class="chip' + (theme === t[0] ? ' on' : '') + '" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
       '</div></div>' +
 
-    '<div class="set-card"><h2>What this kitchen has</h2><p class="sub">Basic is the weekly menu, fridge, freezer and timers. Full adds the recipe book, a meals list and shopping.</p>' +
+    '<div class="set-card"><h2>What this kitchen has</h2><p class="sub">Basic is the weekly menu, meals list, shopping list and timers. Expanded adds fridge and freezer stock with leftovers, and the recipe book.</p>' +
       '<div class="tier" id="sTier">' +
-        '<button class="chip' + (tier === 'basic' ? ' on' : '') + '" data-v="basic">Basic<small>Menu · Fridge · Freezer · Timers</small></button>' +
-        '<button class="chip' + (tier === 'full' ? ' on' : '') + '" data-v="full">Full<small>Adds Recipes · Meals · Shopping</small></button>' +
+        '<button class="chip' + (tier === 'basic' ? ' on' : '') + '" data-v="basic">Basic<small>Menu · Meals · Shopping · Timers</small></button>' +
+        '<button class="chip' + (tier === 'expanded' ? ' on' : '') + '" data-v="expanded">Expanded<small>Adds Fridge &amp; Freezer · Leftovers · Recipes</small></button>' +
       '</div><div class="feat" id="sFeat">' +
-        [['recipes', 'Recipe book'], ['meals', 'Meals list'], ['shopping', 'Shopping list']].map(function (f) {
+        [['meals', 'Meals list'], ['shopping', 'Shopping list'], ['stock', 'Fridge, freezer & leftovers'], ['recipes', 'Recipe book']].map(function (f) {
           return '<button class="check' + (features[f[0]] ? ' on' : '') + '" data-f="' + f[0] + '"><span class="box"></span>' + f[1] + '</button>';
         }).join('') + '</div></div>' +
 
@@ -1635,13 +1639,13 @@ function renderSettings(firstTime) {
       '<div id="sCooks">' + s.cooks.map(function (c) { return lrow('lr-cook', [c], cookPh); }).join('') + '</div>' +
       '<button class="btn quiet" data-addrow="sCooks">+ Add</button></div>' +
 
-    '<div class="set-card"><h2>Freezers</h2><p class="sub">A short code (up to 4 letters) and a name for each freezer.</p>' +
+    '<div id="sStock"' + (features.stock ? '' : ' style="display:none"') + '><div class="set-card"><h2>Freezers</h2><p class="sub">A short code (up to 4 letters) and a name for each freezer.</p>' +
       '<div id="sFrz">' + s.freezers.map(function (f) { return lrow('lr-frz', [f.code, f.name], frzPh); }).join('') + '</div>' +
       '<button class="btn quiet" data-addrow="sFrz">+ Add a freezer</button></div>' +
 
     '<div class="set-card"><h2>Freezer headings</h2><p class="sub">How the freezer list is grouped, in this order. Renaming one moves everything under it. A heading with “snack” or “lunch” in its name is offered for lunches.</p>' +
       '<div id="sHeads">' + s.headings.map(function (h) { return '<div data-orig="' + esc(h) + '">' + lrow('lr-head', [h], headPh) + '</div>'; }).join('') + '</div>' +
-      '<button class="btn quiet" data-addrow="sHeads">+ Add a heading</button></div>' +
+      '<button class="btn quiet" data-addrow="sHeads">+ Add a heading</button></div></div>' +
 
     '<div class="acts" style="display:flex;justify-content:flex-end;gap:12px;margin:6px 0 26px"><button class="btn primary" id="sSave">' + (firstTime ? 'Done — start using it' : 'Save settings') + '</button></div>' +
 
@@ -1667,9 +1671,13 @@ function renderSettings(firstTime) {
   chipGroup('sTier', function (v) {
     tier = v; features = Object.assign({}, TIERS[v]);
     root.querySelectorAll('#sFeat [data-f]').forEach(function (b) { b.classList.toggle('on', !!features[b.dataset.f]); });
+    $('sStock').style.display = features.stock ? '' : 'none';
   });
   root.querySelectorAll('#sFeat [data-f]').forEach(function (b) {
-    b.onclick = function () { features[b.dataset.f] = !features[b.dataset.f]; b.classList.toggle('on', features[b.dataset.f]); };
+    b.onclick = function () {
+      features[b.dataset.f] = !features[b.dataset.f]; b.classList.toggle('on', features[b.dataset.f]);
+      $('sStock').style.display = features.stock ? '' : 'none';
+    };
   });
   root.onclick = function (e) {
     var rm = e.target.closest('[data-rmrow]'); if (rm) { var w = rm.closest('[data-orig]') || rm.closest('.lrow'); w.remove(); return; }
@@ -1768,7 +1776,7 @@ function importRecipeFile(file) {
 function showWelcome() {
   document.body.classList.add('welcome');
   $('welcome').innerHTML = '<h1>Hello, kitchen.</h1>' +
-    '<p>This screen keeps the week\'s menu, what\'s in the fridge and freezer, and kitchen timers. Everything is saved on this tablet only. There are no accounts, and nothing is sent anywhere.</p>' +
+    '<p>This screen keeps the week\'s menu, the shopping list and kitchen timers, and can also track the fridge, freezer and recipes. Everything is saved on this tablet only. There are no accounts, and nothing is sent anywhere.</p>' +
     '<div class="acts"><button class="btn primary" id="wSetup">Set up this kitchen</button><button class="btn" id="wRestore">Restore from a backup…</button></div>' +
     '<input type="file" id="wFile" accept=".json,application/json" style="display:none">';
   $('wSetup').onclick = function () { go('settings'); renderSettings(true); };
