@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#1b1613">
+<title>Kitchen</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1714; --ink-mid: #4a4540; --ink-light: #7a736b; --ink-faint: #c5bfb7;
+    --paper: #faf7f2; --paper-warm: #f2ede4; --paper-card: #fffcf8; --paper-deep: #e9e2d6; --on-accent: #fffcf8;
+    --accent: #7a3b1e; --accent-light: #c4845a; --accent-wash: rgba(122,59,30,0.08);
+    --bears: #2d4a2d; --bears-light: #5a8f5a; --hounds: #1e3a5a; --hounds-light: #4a7aaa;
+    --rule: rgba(90,75,60,0.15);
+    --mon: #f6e3d6; --tue: #f3ecd2; --wed: #e3ecdc; --thu: #dfe8ee; --fri: #ece2ef; --wkd: #f7dcd9;
+    --ok: #3f6b3f; --warn: #a5321e;
+    --tag-blue: #dfe8ee; --tag-butter: #f3ecd2; --tag-sage: #e3ecdc; --amber-text: #a87414; --lo-edge: #b9cbd8;
+    --scrim: rgba(26,23,20,0.32); --shadow: rgba(26,23,20,0.18); --chip-dark: #1a1714; --chip-dark-text: #faf7f2;
+    --nav-w: 112px;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --display: 'Playfair Display', Georgia, serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--serif); background: var(--paper); color: var(--ink);
+    font-size: 18px; line-height: 1.5; overflow: hidden;
+    -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  button { cursor: pointer; border: none; background: none; }
+  .selectable { user-select: text; -webkit-user-select: text; }
+
+  /* ---------- shell ---------- */
+  .app { display: flex; height: 100vh; }
+  nav.rail {
+    width: var(--nav-w); flex-shrink: 0; background: var(--paper-warm);
+    border-right: 1px solid var(--rule); display: flex; flex-direction: column; align-items: stretch;
+    padding: 14px 0 10px;
+  }
+  .clock { text-align: center; padding: 0 6px 12px; border-bottom: 1px solid var(--rule); margin-bottom: 8px; }
+  .clock .t { font-family: var(--display); font-size: 1.75rem; color: var(--accent); line-height: 1.1; }
+  .clock .d { font-size: 0.78rem; color: var(--ink-light); line-height: 1.3; margin-top: 2px; }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 9px 4px; margin: 2px 8px; border-radius: 14px; color: var(--ink-mid);
+    font-size: 0.82rem; letter-spacing: 0.02em;
+  }
+  .tab svg { width: 30px; height: 30px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.on { background: var(--paper-card); color: var(--accent); box-shadow: 0 1px 0 var(--rule), 0 0 0 1px var(--rule); }
+  .tab .badge { position: absolute; }
+  .rail .spacer { flex: 1; }
+  .sync { text-align: center; font-size: 0.7rem; color: var(--ink-light); padding: 6px 4px 0; line-height: 1.25; }
+  .sync.err { color: var(--warn); }
+
+  main { flex: 1; overflow: hidden; position: relative; }
+  .page { position: absolute; inset: 0; overflow-y: auto; padding: 26px 34px 120px; display: none; -webkit-overflow-scrolling: touch; }
+  .page.on { display: block; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  h1 { font-family: var(--display); font-weight: 400; font-size: 2.3rem; color: var(--accent); line-height: 1.1; }
+  h1 small { display: block; font-family: var(--serif); font-size: 0.95rem; color: var(--ink-light); font-style: italic; margin-top: 4px; }
+  h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; color: var(--ink); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 52px; padding: 0 22px; border-radius: 26px; font-size: 1rem;
+    background: var(--paper-card); border: 1px solid var(--rule); color: var(--ink-mid);
+  }
+  .btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .btn.quiet { background: transparent; }
+  .btn.warn { color: var(--warn); }
+  .btn:active { transform: scale(0.97); }
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip {
+    min-height: 48px; padding: 0 20px; border-radius: 24px; border: 1px solid var(--rule);
+    background: var(--paper-card); color: var(--ink-mid); font-size: 0.98rem;
+  }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .search {
+    width: 100%; min-height: 56px; border-radius: 28px; border: 1px solid var(--rule);
+    background: var(--paper-card); padding: 0 24px 0 52px; font-size: 1.05rem; outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='none' stroke='%237a736b' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='9.5' cy='9.5' r='6.5'/%3E%3Cpath d='M14.5 14.5 20 20'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: 20px center;
+  }
+  .search:focus, .field:focus { border-color: var(--accent-light); }
+  .empty { color: var(--ink-light); font-style: italic; padding: 30px 0; text-align: center; }
+
+  /* ---------- Menu ---------- */
+  .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; }
+  .day {
+    border-radius: 18px; background: var(--paper-card); border: 1px solid var(--rule);
+    display: flex; flex-direction: column; overflow: hidden; min-height: 470px;
+  }
+  .day .dh { padding: 14px 12px 12px; text-align: center; border-bottom: 1px solid var(--rule); }
+  .day .dh .n { font-family: var(--display); font-size: 1.25rem; color: var(--ink-mid); }
+  .day .dh .s { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); }
+  .day.today { box-shadow: 0 0 0 3px var(--accent-light); border-color: transparent; }
+  .day.today .dh .s { color: var(--accent); font-weight: 600; }
+  .slot { flex: 1; padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 6px; text-align: left; border-bottom: 1px dashed var(--rule); cursor: pointer; }
+  .slot:last-of-type { border-bottom: none; }
+  .slot .lbl { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .slot .meal { font-family: var(--display); font-size: 1.08rem; line-height: 1.25; color: var(--ink); word-break: break-word; }
+  .slot .meal.none { font-family: var(--serif); font-style: italic; font-size: 0.95rem; color: var(--ink-faint); }
+  .slot .itm { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+  .slot .itm .x { font-family: var(--serif); font-size: 0.85rem; color: var(--ink-light); }
+  .slot .itm.ate .meal { color: var(--ink-light); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+  .src { font-family: var(--serif); font-size: 0.66rem; letter-spacing: 0.06em; padding: 1px 7px; border-radius: 9px; background: var(--paper-warm); color: var(--ink-mid); white-space: nowrap; }
+  .src.leftovers { background: var(--tag-blue); } .src.freezer { background: var(--tag-butter); }
+  .eat { font-size: 0.78rem; color: var(--on-accent); background: var(--accent-light); border-radius: 12px; padding: 3px 11px; }
+  .eat:active { background: var(--accent); }
+  .ateMark { font-size: 0.75rem; color: var(--ok); }
+  .slot .rl { margin-top: auto; align-self: flex-start; font-size: 0.82rem; color: var(--accent); padding: 6px 10px; margin-left: -10px; border-radius: 14px; }
+  .slot .rl:active { background: var(--accent-wash); }
+  .cook { font-size: 0.72rem; letter-spacing: 0.02em; text-transform: none; padding: 2px 9px; border-radius: 10px; background: var(--accent-wash); color: var(--accent); white-space: nowrap; }
+  .cook.none { background: transparent; color: var(--ink-faint); font-style: italic; padding: 2px 0; }
+  .cook.out { background: var(--paper-deep); color: var(--ink-mid); }
+  .locard {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 18px;
+    background: var(--paper-card); border: 1px solid var(--rule); border-left: 4px solid #8fb0c8; border-radius: 16px; padding: 16px 20px;
+  }
+  .locard .q { flex: 1; min-width: 260px; font-size: 1.1rem; }
+  .locard .q small { display: block; color: var(--ink-light); font-style: italic; font-size: 0.88rem; }
+  .locard .lorow { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 1rem; }
+  .locard .lorow .stepper button { width: 44px; height: 44px; font-size: 1.3rem; }
+  .locard .lorow .stepper .v { font-size: 1.6rem; min-width: 44px; }
+
+  /* ---------- Fridge ---------- */
+  .lgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+  .lcard { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; text-align: left; background: var(--paper-card); border: 1px solid var(--rule); border-radius: 16px; padding: 16px 18px; min-height: 92px; border-left: 4px solid var(--lo-edge); }
+  .lcard.amber { border-left-color: #d9a441; } .lcard.red { border-left-color: var(--warn); }
+  .lcard .nm { font-family: var(--display); font-size: 1.25rem; line-height: 1.25; }
+  .lcard .meta { font-size: 0.85rem; color: var(--ink-light); margin-top: 4px; }
+  .lcard.amber .age { color: var(--amber-text); } .lcard.red .age { color: var(--warn); font-weight: 600; }
+  .lcard .q { text-align: right; }
+  .lcard .q b { font-family: var(--display); font-weight: 400; font-size: 1.8rem; color: var(--accent); display: block; line-height: 1; }
+  .lcard .q i { font-size: 0.8rem; color: var(--ink-light); font-style: normal; }
+  .pgroup { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin: 14px 4px 4px; }
+  .sel { display: flex; flex-wrap: wrap; gap: 8px; min-height: 48px; padding: 6px 0 4px; }
+  .sel .chip { min-height: 42px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px; }
+  .sel .none { color: var(--ink-faint); font-style: italic; align-self: center; }
+  .pick .cnt { float: right; font-family: var(--display); color: var(--accent); font-size: 1.1rem; }
+  .day .notes { padding: 8px 12px 12px; font-size: 0.85rem; font-style: italic; color: var(--ink-light); min-height: 44px; text-align: left; width: 100%; }
+  .day .notes.none { color: var(--ink-faint); }
+
+  /* ---------- Recipes ---------- */
+  .rec-layout { grid-template-columns: 340px 1fr; gap: 28px; height: 100%; }
+  #page-recipes { padding: 0; overflow: hidden; }
+  #page-recipes.on { display: grid; }
+  .rec-list { overflow-y: auto; padding: 26px 8px 120px 28px; border-right: 1px solid var(--rule); background: var(--paper); }
+  .rec-list h1 { margin-bottom: 16px; }
+  .rec-list .search { margin-bottom: 18px; }
+  .rsec { margin: 18px 0 6px; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); padding-left: 14px; }
+  .rsec.bears { color: var(--bears); } .rsec.hounds { color: var(--hounds); }
+  .ritem { display: block; width: 100%; text-align: left; padding: 11px 14px; border-radius: 12px; font-size: 1rem; line-height: 1.3; color: var(--ink-mid); border-left: 3px solid transparent; }
+  .ritem.bears { color: var(--bears); } .ritem.hounds { color: var(--hounds); }
+  .ritem.on { background: var(--paper-card); border-left-color: var(--accent-light); color: var(--ink); box-shadow: 0 0 0 1px var(--rule); }
+  .rec-view { overflow-y: auto; padding: 30px 40px 140px 12px; }
+  .rec-view .welcome { color: var(--ink-light); font-style: italic; margin-top: 80px; text-align: center; font-size: 1.15rem; }
+  .rcard { max-width: 860px; }
+  .rcard .sec { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 6px; }
+  .rcard h2 { font-size: 2.1rem; color: var(--ink); line-height: 1.15; margin-bottom: 8px; }
+  .rcard.bears h2 { color: var(--bears); } .rcard.hounds h2 { color: var(--hounds); }
+  .rcard .source { font-style: italic; color: var(--ink-light); font-size: 1.02rem; margin-bottom: 8px; }
+  .rcard .tools { display: flex; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
+  .rcard .subsection { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin: 26px 0 10px; font-weight: 600; }
+  .rcard ul, .rcard ol { list-style: none; }
+  .rcard ul li {
+    font-size: 1.2rem; line-height: 1.45; padding: 10px 14px 10px 48px; border-radius: 12px; position: relative; margin-bottom: 2px;
+  }
+  .rcard ul li::before {
+    content: ''; position: absolute; left: 14px; top: 14px; width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--ink-faint);
+  }
+  .rcard ul li.got { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+  .rcard ul li.got::before { background: var(--accent-light); border-color: var(--accent-light); }
+  .rcard ul li.got::after { content: ''; position: absolute; left: 21px; top: 17px; width: 6px; height: 11px; border: solid var(--on-accent); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+  .rcard ol { counter-reset: step; }
+  .rcard ol li {
+    counter-increment: step; font-size: 1.2rem; line-height: 1.55; padding: 14px 16px 14px 64px; border-radius: 14px; position: relative; margin-bottom: 6px;
+  }
+  .rcard ol li::before {
+    content: counter(step); position: absolute; left: 14px; top: 13px; width: 34px; height: 34px; border-radius: 50%;
+    background: var(--paper-warm); color: var(--ink-mid); font-family: var(--display); font-size: 1.05rem; display: flex; align-items: center; justify-content: center;
+  }
+  .rcard ol li.now { background: var(--paper-card); box-shadow: 0 0 0 2px var(--accent-light); }
+  .rcard ol li.now::before { background: var(--accent); color: var(--on-accent); }
+  .rcard ol li.done { color: var(--ink-light); }
+  .rcard ol li.done::before { content: '✓'; background: var(--paper-deep); color: var(--ink-light); }
+  .rcard p { font-size: 1.2rem; line-height: 1.6; margin-bottom: 12px; padding: 4px 2px; }
+  .rcard strong { font-weight: 600; }
+  .rcard .note, .rcard .story, .rcard .danger, .rcard .todo {
+    font-size: 1.02rem; line-height: 1.6; font-style: italic; padding: 12px 16px; border-radius: 0 10px 10px 0; margin-top: 14px; color: var(--ink-mid);
+  }
+  .rcard .note { background: rgba(90,75,60,0.05); border-left: 3px solid var(--accent-light); }
+  .rcard .story { background: rgba(45,74,45,0.05); border-left: 3px solid var(--bears-light); }
+  .rcard .danger { background: rgba(165,50,30,0.07); border-left: 3px solid var(--accent-light); color: var(--accent); font-style: normal; }
+  .rcard .todo { border: 1px dashed var(--ink-faint); border-radius: 10px; }
+  .tchip {
+    display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+    background: var(--accent-wash); color: var(--accent); border-radius: 16px; padding: 1px 12px 1px 9px; margin: 0 2px;
+    font-style: normal; font-size: 0.95em; line-height: 1.6; vertical-align: baseline;
+  }
+  .tchip svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+  .tchip:active { background: var(--accent-light); color: var(--on-accent); }
+
+  /* ---------- Freezer ---------- */
+  .ftools { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .ftools .search { flex: 1; min-width: 260px; }
+  .fcat { margin: 26px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+  .fcat h2 { font-size: 1.3rem; }
+  .fcat span { color: var(--ink-light); font-size: 0.9rem; }
+  .fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+  .fitem {
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; text-align: left;
+    background: var(--paper-card); border: 1px solid var(--rule); border-radius: 14px; padding: 12px 16px; min-height: 74px;
+  }
+  .fitem .nm { font-size: 1.08rem; line-height: 1.25; color: var(--ink); }
+  .fitem .meta { font-size: 0.82rem; color: var(--ink-light); margin-top: 3px; line-height: 1.35; }
+  .fitem .meta .old { color: var(--warn); }
+  .fitem .q { text-align: right; min-width: 64px; }
+  .fitem .q b { font-family: var(--display); font-weight: 400; font-size: 1.6rem; color: var(--accent); display: block; line-height: 1; }
+  .fitem .q i { font-size: 0.8rem; color: var(--ink-light); font-style: normal; }
+  .ftag { display: inline-block; font-size: 0.7rem; letter-spacing: 0.06em; padding: 1px 8px; border-radius: 10px; margin-right: 6px; background: var(--paper-warm); color: var(--ink-mid); }
+  .ftag.c0 { background: var(--tag-butter); } .ftag.c1 { background: var(--tag-blue); } .ftag.c2 { background: var(--tag-sage); } .ftag.c3 { background: var(--paper-deep); }
+  .recent { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--rule); }
+  .recent ul { list-style: none; margin-top: 8px; columns: 2; column-gap: 40px; }
+  .recent li { font-size: 0.92rem; color: var(--ink-mid); padding: 4px 0; break-inside: avoid; }
+  .recent li span { color: var(--ink-light); }
+
+  /* ---------- Shopping ---------- */
+  .shop-wrap { max-width: 900px; }
+  .shop-add { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+  .field {
+    min-height: 56px; border-radius: 14px; border: 1px solid var(--rule); background: var(--paper-card);
+    padding: 0 18px; font-size: 1.05rem; outline: none; width: 100%;
+  }
+  textarea.field { padding: 14px 18px; min-height: 96px; resize: none; line-height: 1.45; }
+  .shop-add .field.item { flex: 3; min-width: 260px; width: auto; }
+  .shop-add .field.small { flex: 1; min-width: 120px; width: auto; }
+  .sitem {
+    display: flex; align-items: center; gap: 16px; width: 100%; text-align: left;
+    background: var(--paper-card); border: 1px solid var(--rule); border-radius: 14px; padding: 10px 18px; min-height: 64px; margin-bottom: 8px;
+  }
+  .box { width: 32px; height: 32px; border-radius: 9px; border: 2px solid var(--ink-faint); flex-shrink: 0; position: relative; }
+  .sitem.done { background: transparent; }
+  .sitem.done .box { background: var(--accent-light); border-color: var(--accent-light); }
+  .sitem.done .box::after { content: ''; position: absolute; left: 9px; top: 3px; width: 8px; height: 15px; border: solid var(--on-accent); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+  .sitem .it { font-size: 1.15rem; flex: 1; }
+  .sitem.done .it { color: var(--ink-light); text-decoration: line-through; }
+  .sitem .ex { font-size: 0.85rem; color: var(--ink-light); text-align: right; }
+
+  /* ---------- Meals ---------- */
+  .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .mcard { background: var(--paper-card); border: 1px solid var(--rule); border-radius: 16px; padding: 18px 20px; text-align: left; display: flex; flex-direction: column; gap: 6px; min-height: 120px; }
+  .mcard .nm { font-family: var(--display); font-size: 1.25rem; line-height: 1.25; }
+  .mcard .ct { font-size: 0.95rem; color: var(--ink-mid); }
+  .mcard .rc { font-size: 0.85rem; color: var(--accent); margin-top: auto; }
+  .mcard .nt { font-size: 0.85rem; color: var(--ink-light); font-style: italic; }
+
+
+  /* ---------- Settings ---------- */
+  .set-wrap { max-width: 900px; }
+  .set-card { background: var(--paper-card); border: 1px solid var(--rule); border-radius: 18px; padding: 20px 22px; margin-bottom: 16px; }
+  .set-card h2 { margin-bottom: 4px; }
+  .set-card .sub { color: var(--ink-light); font-style: italic; font-size: 0.95rem; margin-bottom: 12px; }
+  .set-card .acts { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+  .lrow { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .lrow .field { min-height: 50px; }
+  .lrow .field.code { flex: 0 0 110px; text-transform: uppercase; }
+  .lrow .rm { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--rule); color: var(--ink-light); font-size: 1.1rem; flex-shrink: 0; }
+  .tier { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tier .chip { min-height: 72px; border-radius: 16px; text-align: left; padding: 10px 18px; line-height: 1.3; }
+  .tier .chip small { display: block; font-size: 0.82rem; opacity: 0.8; }
+  .feat { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+  .hint { font-size: 0.88rem; color: var(--ink-light); margin-top: 8px; }
+  .hint.warn { color: var(--warn); }
+  .welcome-card { max-width: 720px; margin: 40px auto 0; }
+  .welcome-card h1 { margin-bottom: 10px; }
+  .welcome-card p { margin-bottom: 14px; color: var(--ink-mid); }
+  .rec-new { margin: 0 0 14px; width: 100%; }
+
+  /* ---------- sheets (pop-up panels) ---------- */
+  body.welcome nav.rail { display: none; }
+  .scrim { position: fixed; inset: 0; background: var(--scrim); display: none; z-index: 50; }
+  .scrim.on { display: block; }
+  .sheet {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(640px, 92vw); max-height: 88vh; overflow-y: auto; z-index: 60; display: none;
+    background: var(--paper); border-radius: 22px; padding: 26px 28px 24px; box-shadow: 0 20px 60px var(--shadow);
+  }
+  .sheet.on { display: block; }
+  .sheet h2 { font-size: 1.7rem; margin-bottom: 4px; }
+  .sheet .sub { color: var(--ink-light); font-style: italic; margin-bottom: 16px; }
+  .sheet .row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+  .sheet .row > * { flex: 1; }
+  .sheet .lab { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin: 14px 0 6px; }
+  .sheet .acts { display: flex; gap: 12px; justify-content: flex-end; margin-top: 22px; flex-wrap: wrap; }
+  .pick { display: block; width: 100%; text-align: left; padding: 14px 16px; border-radius: 12px; font-size: 1.08rem; border: 1px solid transparent; }
+  .pick:active, .pick.on { background: var(--paper-card); border-color: var(--rule); }
+  .pick small { display: block; color: var(--ink-light); font-size: 0.85rem; }
+  .picklist { max-height: 40vh; overflow-y: auto; margin: 10px -6px 0; padding: 0 6px; }
+  .stepper { display: flex; align-items: center; gap: 14px; }
+  .stepper button { width: 56px; height: 56px; border-radius: 50%; background: var(--paper-card); border: 1px solid var(--rule); font-size: 1.6rem; color: var(--ink-mid); }
+  .stepper .v { font-family: var(--display); font-size: 2.2rem; min-width: 80px; text-align: center; color: var(--accent); }
+  .check { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 1rem; color: var(--ink-mid); }
+  .check .box { width: 28px; height: 28px; }
+  .check.on .box { background: var(--accent-light); border-color: var(--accent-light); }
+  .check.on .box::after { content: ''; position: absolute; left: 8px; top: 3px; width: 7px; height: 13px; border: solid var(--on-accent); border-width: 0 3px 3px 0; transform: rotate(45deg); }
+
+  /* ---------- timers ---------- */
+  .timers { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 40; align-items: flex-end; }
+  .timer {
+    display: flex; align-items: center; gap: 14px; background: var(--chip-dark); color: var(--chip-dark-text); border-radius: 22px;
+    padding: 10px 10px 10px 20px; box-shadow: 0 8px 24px var(--shadow); min-width: 250px;
+  }
+  .timer .tl { flex: 1; font-size: 0.85rem; opacity: 0.75; line-height: 1.2; max-width: 220px; }
+  .timer .tv { font-family: var(--display); font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+  .timer button { width: 44px; height: 44px; border-radius: 50%; background: rgba(250,247,242,0.12); color: var(--paper); font-size: 1.1rem; }
+  .timer.ring { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform: scale(1.04); } }
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: var(--chip-dark); color: var(--chip-dark-text);
+    padding: 14px 24px; border-radius: 24px; z-index: 80; font-size: 1rem; display: none; max-width: 80vw; text-align: center;
+  }
+  .toast.on { display: block; }
+  .toast.err { background: var(--warn); }
+
+  /* ---------- dark: chosen in Settings (or following the tablet) ---------- */
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark;
+  --ink: #f1e8dd; --ink-mid: #d6cabc; --ink-light: #a6988a; --ink-faint: #6e635a;
+  --paper: #1b1613; --paper-warm: #231c18; --paper-card: #2a221d; --paper-deep: #3a3029;
+  --accent: #e69a6f; --accent-light: #c97f55; --accent-wash: rgba(230,154,111,0.15); --on-accent: #1b1613;
+  --bears: #9cc79c; --bears-light: #6f9f6f; --hounds: #9dbde2; --hounds-light: #6c94c2;
+  --rule: rgba(241,232,221,0.11);
+  --mon: #4b3226; --tue: #4a3f22; --wed: #2c3f2b; --thu: #263a4a; --fri: #3b2d48; --wkd: #4c2b2f;
+  --ok: #9cc79c; --warn: #f07e62;
+  --tag-blue: #2b3d4c; --tag-butter: #4a3f22; --tag-sage: #2c3f2b; --amber-text: #e7b45c; --lo-edge: #4f6e86;
+  --scrim: rgba(0,0,0,0.55); --shadow: rgba(0,0,0,0.5); --chip-dark: #f1e8dd; --chip-dark-text: #1b1613;
+  }
+  html.dark .timer button { background: rgba(27,22,19,0.12); color: var(--chip-dark-text); }
+  html.dark .timer.ring { color: var(--on-accent); }
+  html.dark .rcard .note { background: rgba(255,255,255,0.035); }
+  html.dark .rcard .story { background: rgba(156,199,156,0.06); }
+  html.dark .rcard .danger { background: rgba(240,126,98,0.1); }
+  html.dark .search { background-color: var(--paper-card); }
+  html.dark .day.today { box-shadow: 0 0 0 3px var(--accent); }
+  html.dark img { opacity: 0.9; }
+
+  /* ---------- portrait ---------- */
+  @media (orientation: portrait) {
+    .app { flex-direction: column-reverse; }
+    nav.rail { width: 100%; flex-direction: row; padding: 6px 8px; border-right: none; border-top: 1px solid var(--rule); align-items: center; }
+    .clock { border-bottom: none; border-right: 1px solid var(--rule); margin: 0 6px 0 0; padding: 0 12px 0 4px; }
+    .tab { flex: 1; margin: 0 3px; padding: 8px 2px; }
+    .rail .spacer { display: none; }
+    .sync { display: none; }
+    .week { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .day { min-height: 0; }
+    .rec-layout, #page-recipes.on { grid-template-columns: 1fr; }
+    .rec-list { display: none; }
+    .rec-list.show { display: block; border-right: none; }
+    .timers { bottom: 110px; }
+    .toast { bottom: 110px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail">
+    <div class="clock"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div></div>
+    <button class="tab on" data-page="menu">
+      <svg viewBox="0 0 32 32"><rect x="5" y="7" width="22" height="20" rx="3"/><path d="M5 13h22M11 4v6M21 4v6"/><path d="M10 18h4M18 18h4M10 22h4"/></svg>Menu</button>
+    <button class="tab" data-page="recipes">
+      <svg viewBox="0 0 32 32"><path d="M6 6.5c3.5-1.5 7-1.5 10 1v19c-3-2.5-6.5-2.5-10-1z"/><path d="M26 6.5c-3.5-1.5-7-1.5-10 1v19c3-2.5 6.5-2.5 10-1z"/></svg>Recipes</button>
+    <button class="tab" data-page="freezer">
+      <svg viewBox="0 0 32 32"><path d="M16 4v24M6 10l20 12M26 10 6 22"/><path d="m12.5 5.5 3.5 3 3.5-3M12.5 26.5l3.5-3 3.5 3"/></svg>Freezer</button>
+    <button class="tab" data-page="fridge">
+      <svg viewBox="0 0 32 32"><rect x="8" y="3.5" width="16" height="25" rx="3"/><path d="M8 13h16M12 7.5v2.5M12 16.5v4"/></svg>Fridge</button>
+    <button class="tab" data-page="shopping">
+      <svg viewBox="0 0 32 32"><path d="M5 9h22l-2 15a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z"/><path d="M11 13V8a5 5 0 0 1 10 0v5"/></svg>Shopping</button>
+    <button class="tab" data-page="meals">
+      <svg viewBox="0 0 32 32"><circle cx="16" cy="17" r="8"/><circle cx="16" cy="17" r="4.5"/><path d="M4 6v7a2 2 0 0 0 2 2v11M4 6v5M7 6v5M28 6c-2 1-3 4-3 8h3v12"/></svg>Meals</button>
+    <div class="spacer"></div>
+    <button class="tab" id="timerBtn">
+      <svg viewBox="0 0 32 32"><circle cx="16" cy="18" r="10"/><path d="M16 12v6l4 3M13 4h6"/></svg>Timer</button>
+    <button class="tab" data-page="settings">
+      <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="4"/><path d="M16 4v4M16 24v4M4 16h4M24 16h4M7.5 7.5l2.8 2.8M21.7 21.7l2.8 2.8M7.5 24.5l2.8-2.8M21.7 10.3l2.8-2.8"/></svg>Settings</button>
+    <div class="sync" id="sync">Loading…</div>
+  </nav>
+
+  <main>
+    <section class="page on" id="page-menu">
+      <div class="page-head">
+        <h1>This week<small id="menuSub">Tap a meal to change it</small></h1>
+        <button class="btn quiet" id="clearWeek">Clear the week</button>
+      </div>
+      <div id="loCard"></div>
+      <div class="week" id="week"></div>
+    </section>
+
+    <section class="page" id="page-fridge">
+      <div class="page-head">
+        <h1>Fridge<small id="fridgeSub">Leftovers, oldest first</small></h1>
+        <button class="btn primary" id="loAdd">+ Leftover</button>
+      </div>
+      <div class="lgrid" id="fridgeList"></div>
+    </section>
+
+    <section class="page rec-layout" id="page-recipes">
+      <div class="rec-list" id="recList">
+        <h1>Recipes</h1>
+        <button class="btn primary rec-new" id="recAdd">+ Add a recipe</button>
+        <input class="search" id="recSearch" placeholder="Find a recipe…" autocomplete="off">
+        <div id="recIndex"></div>
+      </div>
+      <div class="rec-view" id="recView"><div class="welcome">Pick a recipe.</div></div>
+    </section>
+
+    <section class="page" id="page-freezer">
+      <div class="page-head">
+        <h1>Freezer<small id="frzSub"></small></h1>
+        <button class="btn primary" id="frzAdd">+ Put something in</button>
+      </div>
+      <div class="ftools">
+        <input class="search" id="frzSearch" placeholder="What are you looking for?" autocomplete="off">
+        <div class="chips" id="frzChips"></div>
+      </div>
+      <div id="frzList"></div>
+      <div class="recent" id="frzRecent"></div>
+    </section>
+
+    <section class="page" id="page-shopping">
+      <div class="shop-wrap">
+        <div class="page-head">
+          <h1>Shopping<small id="shopSub"></small></h1>
+          <button class="btn quiet" id="clearTicked">Clear ticked</button>
+        </div>
+        <form class="shop-add" id="shopForm" autocomplete="off">
+          <input class="field item" id="shopItem" placeholder="Add something…">
+          <input class="field small" id="shopQty" placeholder="How many">
+          <input class="field small" id="shopWhere" placeholder="Where">
+          <button class="btn primary" type="submit">Add</button>
+        </form>
+        <div id="shopList"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-meals">
+      <div class="page-head">
+        <h1>Meals<small>Meals you like to make — these are what the menu offers</small></h1>
+        <button class="btn primary" id="mealAdd">+ Add a meal</button>
+      </div>
+      <div class="mgrid" id="mealList"></div>
+    </section>
+
+    <section class="page" id="page-settings">
+      <div class="set-wrap" id="settings"></div>
+    </section>
+
+    <section class="page" id="page-welcome">
+      <div class="welcome-card set-card" id="welcome"></div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="timers" id="timers"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   The kitchen's data — kept on this tablet, nowhere else
+   ========================================================= */
+var KEY = 'kitchen.v1';
+var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+var TIERS = {
+  basic: { recipes: false, meals: false, shopping: false },
+  full: { recipes: true, meals: true, shopping: true }
+};
+var DEFAULT_HEADINGS = ['Meat & Fish', 'Ready Meals & Batch Cooking', 'Vegetables & Fruit', 'Snacks, Breakfasts & Lunches', 'Bread & Baking', 'Other'];
+
+function blankData() {
+  return {
+    v: 1, nextId: 1,
+    settings: {
+      household: '', cooks: ['Takeaway', 'Eating out'],
+      freezers: [{ code: 'KF', name: 'Kitchen freezer' }],
+      headings: DEFAULT_HEADINGS.slice(),
+      tier: 'basic', features: Object.assign({}, TIERS.basic),
+      theme: 'dark', setupDone: false, lastBackup: '', created: today()
+    },
+    menu: DAYS.map(function () { return { lunch: '', dinner: '', notes: '', cook: '' }; }),
+    meals: [], fridge: [], consumed: [], shopping: [], recipes: [],
+    freezer: { updated: '', items: [] }
+  };
+}
+
+function today() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function num(v) { var n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? null : n; }
+function same(a, b) { return String(a || '').toLowerCase().replace(/\s+/g, ' ').trim() === String(b || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+
+var DB = null;
+function load() {
+  if (DB) return DB;
+  var raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) {}
+  DB = raw ? upgrade(JSON.parse(raw)) : blankData();
+  return DB;
+}
+/* Fill in anything an older backup or version is missing, so nothing breaks on restore. */
+function upgrade(d) {
+  var b = blankData();
+  d = d && typeof d === 'object' ? d : {};
+  Object.keys(b).forEach(function (k) { if (d[k] == null) d[k] = b[k]; });
+  Object.keys(b.settings).forEach(function (k) { if (d.settings[k] == null) d.settings[k] = b.settings[k]; });
+  Object.keys(b.settings.features).forEach(function (k) { if (d.settings.features[k] == null) d.settings.features[k] = b.settings.features[k]; });
+  if (!Array.isArray(d.menu) || d.menu.length !== 7) d.menu = b.menu;
+  if (!d.freezer.items) d.freezer = b.freezer;
+  var max = 0;
+  ['meals', 'fridge', 'shopping', 'recipes'].forEach(function (k) { d[k].forEach(function (x) { if (x.id > max) max = x.id; }); });
+  d.freezer.items.forEach(function (x) { if (x.id > max) max = x.id; });
+  if (!d.nextId || d.nextId <= max) d.nextId = max + 1;
+  return d;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch (e) { throw new Error('The tablet is out of room to save. Save a backup, then remove some old things.'); }
+}
+function nid() { return DB.nextId++; }
+function find(list, id, name) {
+  var x = list.filter(function (y) { return y.id === id; })[0];
+  if (!x && name) x = list.filter(function (y) { return same(y.name || y.item || y.title, name); })[0];
+  if (!x) throw new Error('"' + (name || 'That') + '" isn\'t there any more.');
+  return x;
+}
+function remove(list, x) { var i = list.indexOf(x); if (i >= 0) list.splice(i, 1); }
+
+/* Every change runs through here: make it, save it, hand back the fresh picture. */
+function change(fn) { load(); fn(); save(); return Store.getAll(); }
+
+var Store = {
+  getAll: function () {
+    var d = load(), s = d.settings;
+    var freezers = {}; s.freezers.forEach(function (f) { freezers[f.code] = f.name; });
+    var heads = s.headings.slice();
+    d.freezer.items.forEach(function (it) { if (heads.indexOf(it.cat) < 0) heads.push(it.cat); });
+    return {
+      settings: s,
+      menu: d.menu.map(function (m, i) { return { day: DAYS[i], lunch: m.lunch, dinner: m.dinner, notes: m.notes, cook: m.cook }; }),
+      meals: d.meals.map(function (m) { return { row: m.id, name: m.name, contents: m.contents, recipe: m.recipe, notes: m.notes }; }),
+      fridge: d.fridge.map(function (x) { return { row: x.id, name: x.name, portions: x.portions, date: x.date, notes: x.notes }; }),
+      cooks: s.cooks,
+      freezer: {
+        updated: d.freezer.updated,
+        categories: heads.map(function (h) {
+          return { name: h, items: d.freezer.items.filter(function (it) { return it.cat === h; }).map(function (it) {
+            return { row: it.id, name: it.name, qty: it.qty, unit: it.unit, date: it.date, f: it.f, comment: it.comment };
+          }) };
+        })
+      },
+      consumed: d.consumed.slice(-12).reverse(),
+      shopping: d.shopping.map(function (x) { return { row: x.id, done: !!x.done, item: x.item, qty: x.qty, where: x.where }; }),
+      freezers: freezers
+    };
+  },
+
+  /* ---- menu ---- */
+  setMenu: function (i, slot, value) {
+    if (['lunch', 'dinner', 'notes', 'cook'].indexOf(slot) < 0 || i < 0 || i > 6) throw new Error('Unknown menu slot.');
+    return change(function () { DB.menu[i][slot] = value || ''; });
+  },
+  clearMenu: function () { return change(function () { DB.menu = blankData().menu; }); },
+
+  /* ---- meals ---- */
+  addMeal: function (name, contents, recipe, notes) {
+    name = String(name || '').trim(); if (!name) throw new Error('The meal needs a name.');
+    return change(function () { DB.meals.push({ id: nid(), name: name, contents: contents || '', recipe: recipe || '', notes: notes || '' }); });
+  },
+  deleteMeal: function (id, name) { return change(function () { remove(DB.meals, find(DB.meals, id, name)); }); },
+
+  /* ---- freezer ---- */
+  addFreezer: function (cat, name, qty, unit, f, comment) {
+    name = String(name || '').trim(); if (!name) throw new Error('What are you putting in?');
+    return change(function () { putIn(cat, name, qty, unit, f, comment); });
+  },
+  useFreezer: function (id, name, amount, note) {
+    amount = num(amount); if (!amount || amount <= 0) throw new Error('How much was used?');
+    return change(function () { takeOut(find(DB.freezer.items, id, name), amount, note); });
+  },
+  setFreezerQty: function (id, name, qty) {
+    qty = num(qty); if (qty === null || qty < 0) throw new Error('That isn\'t a number.');
+    return change(function () {
+      var it = find(DB.freezer.items, id, name);
+      if (qty === 0) remove(DB.freezer.items, it); else it.qty = qty;
+      DB.freezer.updated = today();
+    });
+  },
+
+  /* ---- fridge ---- */
+  addLeftover: function (name, portions, note) {
+    name = String(name || '').trim(); var p = num(portions);
+    if (!name) throw new Error('What\'s left over?');
+    if (!p || p <= 0) throw new Error('How many portions?');
+    return change(function () { DB.fridge.push({ id: nid(), name: name, portions: p, date: today(), notes: note || '' }); });
+  },
+  setLeftoverPortions: function (id, name, portions) {
+    var p = num(portions); if (p === null || p < 0) throw new Error('That isn\'t a number.');
+    return change(function () { var x = find(DB.fridge, id, name); if (p === 0) remove(DB.fridge, x); else x.portions = p; });
+  },
+  removeLeftover: function (id, name) { return Store.setLeftoverPortions(id, name, 0); },
+  moveLeftoverToFreezer: function (id, name, cat, f) {
+    return change(function () {
+      var x = find(DB.fridge, id, name);
+      putIn(cat, x.name, num(x.portions) || 1, 'portions', f, 'leftovers, from the fridge');
+      remove(DB.fridge, x);
+    });
+  },
+
+  /* ---- "Eaten" on the menu: takes it off the fridge or freezer list, and ticks it ---- */
+  eatMenuItem: function (i, slot, raw, amount) {
+    if ((slot !== 'lunch' && slot !== 'dinner') || i < 0 || i > 6) throw new Error('Unknown menu slot.');
+    return change(function () {
+      var parts = String(DB.menu[i][slot] || '').split(/\s+\+\s+/);
+      var idx = parts.map(function (p) { return p.trim(); }).indexOf(String(raw).trim());
+      if (idx < 0) throw new Error('That isn\'t on the menu any more.');
+      var it = parseItem(parts[idx]); if (it.eaten) return;
+      var qty = num(amount) || it.qty;
+      if (it.kind === 'leftovers') {
+        var v = DB.fridge.filter(function (x) { return same(x.name, it.name); })[0];
+        if (!v) throw new Error('There\'s no "' + it.name + '" in the fridge list.');
+        var have = num(v.portions);
+        if (have === null || have - qty <= 0.0001) remove(DB.fridge, v); else v.portions = have - qty;
+      } else if (it.kind === 'freezer') {
+        var hit = DB.freezer.items.filter(function (x) { return same(x.name, it.name); })[0];
+        if (!hit) throw new Error('There\'s no "' + it.name + '" on the freezer list.');
+        takeOut(hit, qty, slot);
+      }
+      parts[idx] = '✓ ' + parts[idx].trim();
+      DB.menu[i][slot] = parts.join(' + ');
+    });
+  },
+
+  /* ---- shopping ---- */
+  addShopping: function (item, qty, where) {
+    item = String(item || '').trim(); if (!item) throw new Error('What do you need?');
+    return change(function () { DB.shopping.push({ id: nid(), done: false, item: item, qty: qty || '', where: where || '' }); });
+  },
+  setShoppingDone: function (id, item, done) { return change(function () { find(DB.shopping, id, item).done = !!done; }); },
+  clearTicked: function () { return change(function () { DB.shopping = DB.shopping.filter(function (x) { return !x.done; }); }); },
+
+  /* ---- recipes ---- */
+  getRecipes: function () { return load().recipes; },
+  saveRecipe: function (r) {
+    var title = String(r.title || '').trim(); if (!title) throw new Error('The recipe needs a name.');
+    change(function () {
+      var x = r.id ? DB.recipes.filter(function (y) { return y.id === r.id; })[0] : null;
+      if (!x) { x = { id: nid() }; DB.recipes.push(x); }
+      x.title = title; x.section = String(r.section || '').trim() || 'Recipes';
+      x.source = r.source || ''; x.ingredients = r.ingredients || []; x.method = r.method || []; x.notes = r.notes || '';
+      delete x.html;
+      r.id = x.id;
+    });
+    return r.id;
+  },
+  deleteRecipe: function (id) { change(function () { remove(DB.recipes, find(DB.recipes, id)); }); },
+  importRecipes: function (list) {
+    var n = 0;
+    change(function () {
+      list.forEach(function (r) {
+        if (DB.recipes.some(function (y) { return same(y.title, r.title); })) return;
+        DB.recipes.push({ id: nid(), title: r.title, section: r.section || 'Recipes', html: r.html }); n++;
+      });
+    });
+    return n;
+  },
+
+  /* ---- settings, backup ---- */
+  saveSettings: function (s) { return change(function () { Object.assign(DB.settings, s); }); },
+  renameHeading: function (from, to) {
+    return change(function () { DB.freezer.items.forEach(function (it) { if (it.cat === from) it.cat = to; }); });
+  },
+  backup: function () {
+    load(); DB.settings.lastBackup = today(); save();
+    return JSON.stringify({ kitchenScreenBackup: 1, saved: new Date().toISOString(), data: DB }, null, 1);
+  },
+  restore: function (text) {
+    var o; try { o = JSON.parse(text); } catch (e) { throw new Error('That file isn\'t a kitchen backup.'); }
+    if (!o || !o.kitchenScreenBackup || !o.data || !o.data.settings) throw new Error('That file isn\'t a kitchen backup.');
+    DB = upgrade(o.data); save(); return Store.getAll();
+  },
+  eraseAll: function () { DB = blankData(); try { localStorage.removeItem(KEY); } catch (e) {} return Store.getAll(); },
+  isNew: function () { return !load().settings.setupDone; }
+};
+
+function putIn(cat, name, qty, unit, f, comment) {
+  if (!cat) cat = DB.settings.headings[0] || 'Other';
+  var q = num(qty);
+  DB.freezer.items.push({ id: nid(), cat: cat, name: name, qty: q === null ? '' : q, unit: unit || '', date: today(),
+    f: String(f || '').toUpperCase(), comment: comment || '' });
+  DB.freezer.updated = today();
+}
+function takeOut(it, amount, note) {
+  DB.consumed.push({ name: it.name, qty: amount, unit: it.unit, date: today(), f: it.f, comment: note || '' });
+  if (DB.consumed.length > 200) DB.consumed = DB.consumed.slice(-200);
+  var have = num(it.qty);
+  if (have === null || have - amount <= 0.0001) remove(DB.freezer.items, it);
+  else it.qty = Math.round((have - amount) * 100) / 100;
+  DB.freezer.updated = today();
+}
+
+function call(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (resolve, reject) {
+    try { resolve(Store[fn].apply(null, args)); } catch (e) { reject(e); }
+  });
+}
+
+var D = null;            // everything the screen shows
+var R = { sections: [], recipes: [], byId: {}, byTitle: {} };
+var state = { page: 'menu', frzFilter: 'ALL', recipe: null, busy: false, lastLoad: 0 };
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+
+function toast(msg, err) {
+  var t = $('toast'); t.textContent = msg; t.className = 'toast on' + (err ? ' err' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = 'toast'; }, err ? 5000 : 2600);
+}
+
+function setSync(text, err) { var s = $('sync'); s.textContent = text; s.className = 'sync' + (err ? ' err' : ''); }
+
+function apply(data) {
+  D = data; state.lastLoad = Date.now();
+  applyLook();
+  setSync(backupStatus().short, backupStatus().due);
+  renderAll();
+}
+
+function act(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  state.busy = true; setSync('Saving…');
+  return call.apply(null, [fn].concat(args)).then(function (d) { state.busy = false; apply(d); return d; })
+    .catch(function (e) {
+      state.busy = false; setSync('Not saved', true);
+      toast((e && e.message) || 'Something went wrong — try again.', true);
+      return refresh();
+    });
+}
+
+function refresh() {
+  return call('getAll').then(apply).catch(function (e) { setSync('Couldn\'t load', true); toast((e && e.message) || 'Couldn\'t load.', true); });
+}
+
+/* How long since the last backup — shown under the tabs, and nags gently after two weeks */
+function backupStatus() {
+  var last = D && D.settings.lastBackup;
+  if (!last) return { short: 'No backup yet', long: 'No backup saved yet.', due: true };
+  var days = Math.round((new Date(today()) - new Date(last)) / 864e5);
+  var when = days <= 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
+  return { short: 'Backed up ' + when, long: 'Last backup saved ' + when + '.', due: days >= 14 };
+}
+
+/* Dark / light, and which tabs this kitchen has */
+function feat(k) { return !D || D.settings.features[k] !== false; }
+function applyLook() {
+  var t = D.settings.theme;
+  var dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.classList.toggle('dark', !!dark);
+  var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = dark ? '#1b1613' : '#f2ede4';
+  ['recipes', 'meals', 'shopping'].forEach(function (k) {
+    var tab = document.querySelector('.tab[data-page="' + k + '"]'); if (tab) tab.style.display = feat(k) ? '' : 'none';
+    if (!feat(k) && state.page === k) go('menu');
+  });
+  FCODES = D.settings.freezers.map(function (f) { return f.code; });
+  document.title = D.settings.household ? D.settings.household + ' · Kitchen' : 'Kitchen';
+}
+
+/* =========================================================
+   Clock + navigation
+   ========================================================= */
+function tick() {
+  var n = new Date();
+  $('clockT').textContent = n.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '');
+  $('clockD').textContent = n.toLocaleDateString([], { weekday: 'long' }) + '\n';
+  $('clockD').innerHTML = esc(n.toLocaleDateString([], { weekday: 'long' })) + '<br>' + esc(n.toLocaleDateString([], { month: 'short', day: 'numeric' }));
+}
+
+function go(page) {
+  state.page = page;
+  document.querySelectorAll('.tab[data-page]').forEach(function (b) { b.classList.toggle('on', b.dataset.page === page); });
+  document.querySelectorAll('.page').forEach(function (p) { p.classList.toggle('on', p.id === 'page-' + page); });
+  if (page === 'recipes' && !state.recipe) $('recList').classList.add('show');
+  if (page === 'settings' && D && !document.body.classList.contains('welcome')) renderSettings();
+  if (page === 'settings' || page === 'welcome') $('page-' + page).scrollTop = 0;
+}
+
+/* =========================================================
+   Pop-up panel helpers
+   ========================================================= */
+function openSheet(html, onReady) {
+  var s = $('sheet'); s.innerHTML = html; s.classList.add('on'); $('scrim').classList.add('on'); s.scrollTop = 0;
+  if (onReady) onReady(s);
+}
+function closeSheet() { $('sheet').classList.remove('on'); $('scrim').classList.remove('on'); $('sheet').innerHTML = ''; }
+function sheetOpen() { return $('sheet').classList.contains('on'); }
+function confirmSheet(title, body, yes, onYes, warn) {
+  openSheet('<h2>' + esc(title) + '</h2><p class="sub">' + esc(body) + '</p><div class="acts"><button class="btn" data-x>Cancel</button><button class="btn ' + (warn ? 'primary' : 'primary') + '" data-y>' + esc(yes) + '</button></div>', function (s) {
+    s.querySelector('[data-x]').onclick = closeSheet;
+    s.querySelector('[data-y]').onclick = function () { closeSheet(); onYes(); };
+  });
+}
+
+/* =========================================================
+   MENU
+   ========================================================= */
+var DAY_COL = ['--mon', '--tue', '--wed', '--thu', '--fri', '--wkd', '--wkd'];
+var OUT_RE = /take ?away|take-?out|eating out|dining out|eat out|order(ing)? in|delivery/i;
+/* "Sam" → "Sam's cooking"; "Takeaway", "Team effort" and anything else with a space stay as they are */
+function cookLabel(c) { return OUT_RE.test(c) || /\s/.test(c) ? c : c + '\'s cooking'; }
+function todayIdx() { return (new Date().getDay() + 6) % 7; }
+function mealByName(name) {
+  var n = norm(name);
+  return (D.meals || []).filter(function (m) { return norm(m.name) === n; })[0];
+}
+function recipeFor(text) {
+  if (!text) return null;
+  var m = mealByName(text);
+  var key = norm(m && m.recipe ? m.recipe : text);
+  return R.byTitle[key] || null;
+}
+
+/* One menu cell can hold several things: "Bean soup (leftovers) ×2 + Sausage rolls (freezer)" */
+function parseItem(raw) {
+  var m = String(raw).trim().match(/^(✓\s*)?(.*?)(?:\s*\((leftovers|freezer)\))?(?:\s*×\s*(\d+(?:\.\d+)?))?$/);
+  return { raw: String(raw).trim(), eaten: !!m[1], name: m[2].trim(), kind: m[3] || 'meal', qty: m[4] ? parseFloat(m[4]) : 1 };
+}
+function parseCell(v) { return String(v || '').trim() ? String(v).split(/\s+\+\s+/).map(parseItem).filter(function (x) { return x.name; }) : []; }
+function itemRaw(it) {
+  return (it.eaten ? '✓ ' : '') + it.name + (it.kind !== 'meal' ? ' (' + it.kind + ')' : '') + (it.qty > 1 ? ' ×' + it.qty : '');
+}
+
+function renderMenu() {
+  var ti = todayIdx();
+  var html = D.menu.map(function (d, i) {
+    function slot(kind, label) {
+      var items = parseCell(d[kind]);
+      var canEat = i <= ti;
+      var rec = null;
+      var body = items.length ? items.map(function (it) {
+        if (!rec && it.kind === 'meal') rec = recipeFor(it.name);
+        return '<div class="itm' + (it.eaten ? ' ate' : '') + '"><span class="meal">' + esc(it.name) + '</span>' +
+          (it.qty > 1 ? '<span class="x">×' + it.qty + '</span>' : '') +
+          (it.kind === 'leftovers' ? '<span class="src leftovers">fridge</span>' : it.kind === 'freezer' ? '<span class="src freezer">freezer</span>' : '') +
+          (it.kind !== 'meal' && canEat ? (it.eaten ? '<span class="ateMark">✓ eaten</span>' : '<button class="eat" data-eat="' + esc(it.raw) + '" data-day="' + i + '" data-slot="' + kind + '">Eaten</button>') : '') +
+          '</div>';
+      }).join('') : '<span class="meal none">Nothing yet</span>';
+      var cook = '';
+      if (kind === 'dinner') {
+        var c = d.cook;
+        cook = '<button class="cook' + (c ? (OUT_RE.test(c) ? ' out' : '') : ' none') + '" data-cook="' + i + '">' + (c ? esc(cookLabel(c)) : 'who\'s cooking?') + '</button>';
+      }
+      return '<div class="slot" data-day="' + i + '" data-slot="' + kind + '">' +
+        '<span class="lbl"><span>' + label + '</span>' + cook + '</span>' + body +
+        (rec ? '<span class="rl" data-recipe="' + esc(rec.id) + '">Open recipe →</span>' : '') +
+        '</div>';
+    }
+    return '<div class="day' + (i === ti ? ' today' : '') + '">' +
+      '<div class="dh" style="background:var(' + DAY_COL[i] + ')"><div class="s">' + (i === ti ? 'Today' : esc(d.day.slice(0, 3))) + '</div><div class="n">' + esc(d.day) + '</div></div>' +
+      slot('lunch', 'Lunch') + slot('dinner', 'Dinner') +
+      '<button class="notes' + (d.notes ? '' : ' none') + '" data-day="' + i + '" data-slot="notes">' + (d.notes ? esc(d.notes) : '+ note') + '</button>' +
+      '</div>';
+  }).join('');
+  $('week').innerHTML = html;
+  renderLeftoverCard();
+}
+
+/* ---------- picking what's for lunch / dinner (several things allowed) ---------- */
+function freezerSnacks() {
+  var out = [];
+  (D.freezer.categories || []).forEach(function (c) {
+    if (/snack|lunch/i.test(c.name)) c.items.forEach(function (it) { out.push(it); });
+  });
+  return out;
+}
+
+function pickMeal(dayIdx, slot) {
+  var d = D.menu[dayIdx];
+  if (slot === 'notes') { editNote(dayIdx); return; }
+  var sel = parseCell(d[slot]);
+  var fridge = (D.fridge || []).slice().sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+  var snacks = freezerSnacks();
+  var meals = (D.meals || []).slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+  function count(name, kind) { var x = sel.filter(function (s) { return s.kind === kind && norm(s.name) === norm(name); })[0]; return x ? x.qty : 0; }
+  function group(title, rows) { return rows ? '<div class="pgroup">' + title + '</div>' + rows : ''; }
+  function pickRows(list, kind, sub) {
+    return list.map(function (x) {
+      var n = count(x.name, kind);
+      return '<button class="pick' + (n ? ' on' : '') + '" data-kind="' + kind + '" data-name="' + esc(x.name) + '">' +
+        (n ? '<span class="cnt">' + (kind === 'meal' ? '✓' : '×' + n) + '</span>' : '') + esc(x.name) + '<small>' + esc(sub(x)) + '</small></button>';
+    }).join('');
+  }
+  var fridgeRows = pickRows(fridge, 'leftovers', function (x) { return qtyText(x.portions) + ' portion' + (parseFloat(x.portions) === 1 ? '' : 's') + ' · ' + dayAge(x.date).text; });
+  var snackRows = pickRows(snacks, 'freezer', function (x) { return fname(x.f) + ' · ' + qtyText(x.qty) + ' ' + x.unit; });
+  var mealRows = feat('meals') ? pickRows(meals, 'meal', function (x) { return x.contents || ''; }) : '';
+  var groups = slot === 'lunch'
+    ? group('In the fridge', fridgeRows) + group('Freezer snacks', snackRows) + group('Meals', mealRows)
+    : group('Meals', mealRows) + group('In the fridge', fridgeRows) + group('Freezer snacks', snackRows);
+
+  openSheet('<h2>' + esc(d.day) + ' ' + slot + '</h2><p class="sub">Tap everything that\'s on. Tap a leftover twice for two portions.</p>' +
+    '<div class="sel" id="selRow"></div>' +
+    '<input class="search" id="mealFilter" placeholder="Find…" autocomplete="off" style="margin-top:6px">' +
+    '<div class="picklist" id="mealPick">' + (groups || '<p class="empty">Nothing in the fridge or freezer snacks yet — type what\'s on below.</p>') + '</div>' +
+    '<div class="lab">Something else</div>' +
+    '<div class="row"><input class="field" id="mealOther" placeholder="e.g. Sandwiches, eating out"><button class="btn" id="addOther" style="flex:0 0 auto">Add</button></div>' +
+    '<div class="acts"><button class="btn quiet warn" data-clear>Clear</button><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Save</button></div>', function (s) {
+      function drawSel() {
+        $('selRow').innerHTML = sel.length ? sel.map(function (x, i) {
+          return '<button class="chip on" data-rm="' + i + '">' + (x.eaten ? '✓ ' : '') + esc(x.name) + (x.qty > 1 ? ' ×' + x.qty : '') + ' <span>✕</span></button>';
+        }).join('') : '<span class="none">Nothing chosen yet</span>';
+        s.querySelectorAll('[data-kind]').forEach(function (b) {
+          var n = count(b.dataset.name, b.dataset.kind);
+          b.classList.toggle('on', !!n);
+          var c = b.querySelector('.cnt'); if (c) c.remove();
+          if (n) b.insertAdjacentHTML('afterbegin', '<span class="cnt">' + (b.dataset.kind === 'meal' ? '✓' : '×' + n) + '</span>');
+        });
+        s.querySelectorAll('[data-rm]').forEach(function (b) { b.onclick = function () {
+          var x = sel[+b.dataset.rm];
+          if (x.qty > 1 && !x.eaten) x.qty--; else sel.splice(+b.dataset.rm, 1);
+          drawSel();
+        }; });
+      }
+      s.querySelectorAll('[data-kind]').forEach(function (b) {
+        b.onclick = function () {
+          var kind = b.dataset.kind, name = b.dataset.name;
+          var x = sel.filter(function (s2) { return s2.kind === kind && norm(s2.name) === norm(name) && !s2.eaten; })[0];
+          if (kind === 'meal') { if (x) sel.splice(sel.indexOf(x), 1); else sel.push({ name: name, kind: 'meal', qty: 1 }); }
+          else if (x) x.qty++; else sel.push({ name: name, kind: kind, qty: 1 });
+          drawSel();
+        };
+      });
+      $('addOther').onclick = function () {
+        var v = $('mealOther').value.trim(); if (!v) return;
+        sel.push({ name: v.replace(/\s*\+\s*/g, ' & '), kind: 'meal', qty: 1 }); $('mealOther').value = ''; drawSel();
+      };
+      $('mealFilter').oninput = function () {
+        var q = norm(this.value);
+        s.querySelectorAll('[data-kind]').forEach(function (b) { b.style.display = !q || norm(b.textContent).indexOf(q) >= 0 ? '' : 'none'; });
+      };
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-clear]').onclick = function () { sel = []; drawSel(); };
+      s.querySelector('[data-y]').onclick = function () {
+        var extra = $('mealOther').value.trim();
+        if (extra) sel.push({ name: extra.replace(/\s*\+\s*/g, ' & '), kind: 'meal', qty: 1 });
+        closeSheet(); act('setMenu', dayIdx, slot, sel.map(itemRaw).join(' + '));
+      };
+      drawSel();
+    });
+}
+
+function editNote(dayIdx) {
+  var d = D.menu[dayIdx];
+  openSheet('<h2>' + esc(d.day) + ' notes</h2><p class="sub">Anything to remember for the day.</p>' +
+    '<textarea class="field" id="noteIn" placeholder="e.g. Late home, defrost the chilli">' + esc(d.notes || '') + '</textarea>' +
+    '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Save</button></div>', function (s) {
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () { var v = $('noteIn').value.trim(); closeSheet(); act('setMenu', dayIdx, 'notes', v); };
+    });
+}
+
+function pickCook(dayIdx) {
+  var d = D.menu[dayIdx];
+  var cooks = D.cooks || [];
+  openSheet('<h2>' + esc(d.day) + ' dinner</h2><p class="sub">Who\'s cooking?</p><div class="chips">' +
+    cooks.map(function (c) { return '<button class="chip' + (d.cook === c ? ' on' : '') + '" data-c="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') +
+    '</div><div class="acts">' + (d.cook ? '<button class="btn quiet warn" data-clear>Clear</button>' : '') + '<button class="btn" data-x>Cancel</button></div>', function (s) {
+      s.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { closeSheet(); act('setMenu', dayIdx, 'cook', b.dataset.c); }; });
+      s.querySelector('[data-x]').onclick = closeSheet;
+      var c = s.querySelector('[data-clear]'); if (c) c.onclick = function () { closeSheet(); act('setMenu', dayIdx, 'cook', ''); };
+    });
+}
+
+function eatItem(dayIdx, slot, raw) {
+  var it = parseItem(raw);
+  var amt = it.qty;
+  var where = it.kind === 'leftovers' ? 'the fridge list' : 'the freezer list';
+  openSheet('<h2>' + esc(it.name) + '</h2><p class="sub">Eaten — this comes off ' + where + '.</p>' +
+    '<div class="lab">' + (it.kind === 'leftovers' ? 'Portions' : 'How many') + '</div><div class="stepper"><button data-dn>−</button><div class="v" id="eatAmt">' + qtyText(amt) + '</div><button data-up>+</button></div>' +
+    '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Eaten</button></div>', function (s) {
+      function show() { $('eatAmt').textContent = qtyText(amt); }
+      s.querySelector('[data-dn]').onclick = function () { amt = Math.max(0.5, amt - (amt > 1 ? 1 : 0.5)); show(); };
+      s.querySelector('[data-up]').onclick = function () { amt = amt + (amt < 1 ? 0.5 : 1); show(); };
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        closeSheet(); act('eatMenuItem', dayIdx, slot, raw, amt).then(function () { toast(it.name + ': ' + qtyText(amt) + ' eaten.'); });
+      };
+    });
+}
+
+/* ---------- "anything left from last night?" ---------- */
+function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+var answered = {};
+function loKey() {
+  var y = (todayIdx() + 6) % 7; var d = D.menu[y];
+  return 'kitchen.lo.' + ymd(new Date()) + '.' + norm(d && d.dinner);
+}
+function loAnswered() { var k = loKey(); if (answered[k]) return true; try { return localStorage.getItem(k) === '1'; } catch (e) { return false; } }
+function loDone() { var k = loKey(); answered[k] = true; try { localStorage.setItem(k, '1'); } catch (e) {} renderLeftoverCard(); }
+
+function renderLeftoverCard() {
+  var box = $('loCard'); if (!box) return;
+  var y = (todayIdx() + 6) % 7, d = D.menu[y];
+  var meals = parseCell(d && d.dinner).filter(function (x) { return x.kind === 'meal'; });
+  if (!meals.length || /eating out|dining out|eat out/i.test(d.cook || '') || loAnswered()) { box.innerHTML = ''; return; }
+  var names = meals.map(function (m) { return m.name; });
+  box.innerHTML = '<div class="locard"><div class="q">Anything left from last night?<small>' + esc(d.day) + '\'s dinner — tap how many portions went in the fridge.</small>' +
+    meals.map(function (m, i) {
+      return '<div class="lorow"><div class="stepper"><button data-lodn="' + i + '">−</button><div class="v" id="lo' + i + '">0</div><button data-loup="' + i + '">+</button></div>' + esc(m.name) + '</div>';
+    }).join('') + '</div>' +
+    '<button class="btn" data-lono>Nothing left</button><button class="btn primary" data-loyes>Put in the fridge</button></div>';
+  var counts = names.map(function () { return 0; });
+  box.querySelectorAll('[data-loup]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.loup; counts[i]++; $('lo' + i).textContent = counts[i]; }; });
+  box.querySelectorAll('[data-lodn]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.lodn; counts[i] = Math.max(0, counts[i] - 1); $('lo' + i).textContent = counts[i]; }; });
+  box.querySelector('[data-lono]').onclick = loDone;
+  box.querySelector('[data-loyes]').onclick = function () {
+    var todo = names.map(function (n, i) { return [n, counts[i]]; }).filter(function (x) { return x[1] > 0; });
+    if (!todo.length) { toast('Tap + for how many portions — or "Nothing left".'); return; }
+    loDone();
+    var p = Promise.resolve();
+    todo.forEach(function (x) { p = p.then(function () { return act('addLeftover', x[0], x[1], ''); }); });
+    p.then(function () { toast('In the fridge.'); });
+  };
+}
+
+/* =========================================================
+   FRIDGE
+   ========================================================= */
+function dayAge(dateStr) {
+  var m = String(dateStr || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (!m) { var mm = String(dateStr || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (mm) m = [0, mm[3], mm[1], mm[2]]; }
+  if (!m) return { days: 0, text: dateStr || '', cls: '' };
+  var then = new Date(+m[1], +m[2] - 1, +m[3]), now = new Date(); now.setHours(0, 0, 0, 0);
+  var days = Math.round((now - then) / 864e5);
+  var text = days <= 0 ? 'in today' : days === 1 ? '1 day old' : days + ' days old';
+  return { days: days, text: text, cls: days >= 4 ? 'red' : days >= 3 ? 'amber' : '' };
+}
+
+function renderFridge() {
+  var list = (D.fridge || []).slice().sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+  $('fridgeList').innerHTML = list.length ? list.map(function (x) {
+    var a = dayAge(x.date);
+    return '<button class="lcard ' + a.cls + '" data-lo="' + x.row + '"><div><div class="nm">' + esc(x.name) + '</div>' +
+      '<div class="meta"><span class="age">' + esc(a.text) + (a.cls === 'red' ? ' — freeze it or bin it' : a.cls === 'amber' ? ' — eat soon' : '') + '</span>' +
+      (x.notes ? '<br>' + esc(x.notes) : '') + '</div></div>' +
+      '<div class="q"><b>' + qtyText(x.portions) + '</b><i>portion' + (parseFloat(x.portions) === 1 ? '' : 's') + '</i></div></button>';
+  }).join('') : '<p class="empty">No leftovers in the fridge.</p>';
+  $('fridgeSub').textContent = list.length ? list.length + ' leftover' + (list.length === 1 ? '' : 's') + ' · best eaten within 3–4 days' : 'Leftovers, oldest first';
+  var tab = document.querySelector('.tab[data-page="fridge"]');
+  if (tab) tab.style.color = list.some(function (x) { return dayAge(x.date).cls === 'red'; }) ? 'var(--warn)' : '';
+}
+
+function leftoverAdd() {
+  var names = {};
+  (D.meals || []).forEach(function (m) { names[m.name] = 1; });
+  D.menu.forEach(function (d) { parseCell(d.dinner).concat(parseCell(d.lunch)).forEach(function (x) { if (x.kind === 'meal') names[x.name] = 1; }); });
+  var p = 2;
+  openSheet('<h2>Leftovers</h2><p class="sub">Into the fridge, dated today.</p>' +
+    '<div class="lab">What is it</div><input class="field" id="lName" list="loNames" placeholder="e.g. Chilli">' +
+    '<datalist id="loNames">' + Object.keys(names).sort().map(function (n) { return '<option>' + esc(n) + '</option>'; }).join('') + '</datalist>' +
+    '<div class="lab">Portions</div><div class="stepper"><button data-dn>−</button><div class="v" id="lP">2</div><button data-up>+</button></div>' +
+    '<div class="lab">Note</div><input class="field" id="lNote" placeholder="optional — e.g. no rice left">' +
+    '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Put it in</button></div>', function (s) {
+      s.querySelector('[data-dn]').onclick = function () { p = Math.max(1, p - 1); $('lP').textContent = p; };
+      s.querySelector('[data-up]').onclick = function () { p++; $('lP').textContent = p; };
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        var n = $('lName').value.trim(); if (!n) { toast('What\'s left over?'); return; }
+        var note = $('lNote').value.trim(); closeSheet();
+        act('addLeftover', n, p, note).then(function () { toast(n + ' is in the fridge.'); });
+      };
+      setTimeout(function () { $('lName').focus(); }, 50);
+    });
+}
+
+function leftoverDetail(row) {
+  var x = (D.fridge || []).filter(function (f) { return f.row === row; })[0]; if (!x) return;
+  var have = parseFloat(x.portions); if (isNaN(have)) have = 1;
+  var v = have, a = dayAge(x.date);
+  var cats = D.freezer.categories.map(function (c) { return c.name; });
+  var defCat = cats.filter(function (c) { return /dinner|meal/i.test(c); })[0] || cats[0];
+  var f = FCODES[0];
+  openSheet('<h2>' + esc(x.name) + '</h2><p class="sub">' + esc(a.text) + (x.notes ? ' · ' + esc(x.notes) : '') + '</p>' +
+    '<div class="lab">Portions left</div><div class="stepper"><button data-dn>−</button><div class="v" id="lv">' + qtyText(v) + '</div><button data-up>+</button></div>' +
+    '<div class="acts"><button class="btn quiet warn" data-bin>Bin it</button><button class="btn" data-frz>Move to freezer…</button><button class="btn" data-x>Close</button><button class="btn primary" data-y>Save</button></div>', function (s) {
+      function show() { $('lv').textContent = qtyText(v); }
+      s.querySelector('[data-dn]').onclick = function () { v = Math.max(0, v - (v > 1 ? 1 : 0.5)); show(); };
+      s.querySelector('[data-up]').onclick = function () { v = v + (v < 1 ? 0.5 : 1); show(); };
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        if (v === have) { closeSheet(); return; }
+        if (v === 0) confirmSheet('All gone?', x.name + ' comes off the fridge list.', 'Yes, all gone', function () { act('setLeftoverPortions', x.row, x.name, 0); });
+        else { closeSheet(); act('setLeftoverPortions', x.row, x.name, v); }
+      };
+      s.querySelector('[data-bin]').onclick = function () {
+        confirmSheet('Bin ' + x.name + '?', 'It comes off the fridge list.', 'Bin it', function () { act('removeLeftover', x.row, x.name).then(function () { toast(x.name + ' binned.'); }); });
+      };
+      s.querySelector('[data-frz]').onclick = function () {
+        openSheet('<h2>Freeze ' + esc(x.name) + '</h2><p class="sub">' + qtyText(have) + ' portion' + (have === 1 ? '' : 's') + ' go onto the freezer list, dated today.</p>' +
+          '<div class="lab">Which freezer</div><div class="chips">' + FCODES.map(function (c) { return '<button class="chip' + (c === f ? ' on' : '') + '" data-c="' + c + '">' + esc(fname(c)) + '</button>'; }).join('') + '</div>' +
+          '<div class="lab">Under which heading</div><select class="field" id="fCat">' + cats.map(function (c) { return '<option' + (c === defCat ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select>' +
+          '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Freeze it</button></div>', function (s2) {
+            s2.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { f = b.dataset.c; s2.querySelectorAll('[data-c]').forEach(function (z) { z.classList.toggle('on', z === b); }); }; });
+            s2.querySelector('[data-x]').onclick = closeSheet;
+            s2.querySelector('[data-y]').onclick = function () {
+              var cat = $('fCat').value; closeSheet();
+              act('moveLeftoverToFreezer', x.row, x.name, cat, f).then(function () { toast(x.name + ' moved to the ' + fname(f).toLowerCase() + '.'); });
+            };
+          });
+      };
+    });
+}
+
+/* =========================================================
+   RECIPES
+   ========================================================= */
+function parseRecipes(html) {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  var main = doc.querySelector('main') || doc.body;
+  var sections = [], cur = null, recipes = [];
+  Array.prototype.forEach.call(main.children, function (el) {
+    if (el.classList.contains('section-header')) {
+      var h = el.querySelector('h2');
+      var note = el.querySelector('.section-note');
+      cur = { title: h ? h.textContent.trim() : '', note: note ? note.textContent.trim() : '',
+        kind: el.classList.contains('bears') ? 'bears' : el.classList.contains('hounds') ? 'hounds' : '', recipes: [] };
+      sections.push(cur);
+    } else if (el.classList.contains('recipe')) {
+      if (!cur) { cur = { title: 'Recipes', note: '', kind: '', recipes: [] }; sections.push(cur); }
+      var h3 = el.querySelector('h3');
+      var kind = el.classList.contains('bears') ? 'bears' : el.classList.contains('hounds') ? 'hounds' : cur.kind;
+      var title = h3 ? h3.textContent.trim() : (el.id === 'bears-todo' ? 'Still to add from the notebooks' : el.id);
+      var body = el.cloneNode(true); var hh = body.querySelector('h3'); if (hh) hh.remove();
+      var r = { id: el.id || ('r' + recipes.length), title: title, kind: kind, section: cur.title,
+        html: body.innerHTML, text: norm(title + ' ' + body.textContent), shortTitle: title };
+      recipes.push(r); cur.recipes.push(r);
+    }
+  });
+  var byId = {}, byTitle = {};
+  recipes.forEach(function (r) { byId[r.id] = r; byTitle[norm(r.title)] = r; byTitle[norm(r.shortTitle)] = r; });
+  return { sections: sections, recipes: recipes, byId: byId, byTitle: byTitle };
+}
+
+function recipeHtml(r) {
+  if (r.html) return r.html;
+  function list(text, tag) {
+    var out = '', open = false;
+    String(text || '').split('\n').forEach(function (l) {
+      l = l.trim().replace(/^([-•*]|\d+[.)])\s+/, ''); if (!l) return;
+      if (/:$/.test(l) && l.length < 60) {
+        if (open) { out += '</' + tag + '>'; open = false; }
+        out += '<div class="subsection">' + esc(l.slice(0, -1)) + '</div>'; return;
+      }
+      if (!open) { out += '<' + tag + '>'; open = true; }
+      out += '<li>' + esc(l) + '</li>';
+    });
+    return out + (open ? '</' + tag + '>' : '');
+  }
+  var ing = [].concat(r.ingredients || []).join('\n'), met = [].concat(r.method || []).join('\n');
+  return (r.source ? '<p class="source">' + esc(r.source) + '</p>' : '') +
+    (ing.trim() ? '<div class="subsection">Ingredients</div>' + list(ing, 'ul') : '') +
+    (met.trim() ? '<div class="subsection">Method</div>' + list(met, 'ol') : '') +
+    (r.notes ? '<div class="note">' + esc(r.notes).replace(/\n/g, '<br>') + '</div>' : '');
+}
+
+function loadRecipes() {
+  return call('getRecipes').then(function (list) {
+    var sections = [], bySec = {}, recipes = [], byId = {}, byTitle = {};
+    list.slice().sort(function (a, b) { return a.title.localeCompare(b.title); }).forEach(function (x) {
+      var html = recipeHtml(x);
+      var tmp = document.createElement('div'); tmp.innerHTML = html;
+      var r = { id: 'r' + x.id, dbId: x.id, editable: !x.html, title: x.title, shortTitle: x.title, kind: '', section: x.section || 'Recipes',
+        html: html, text: norm(x.title + ' ' + tmp.textContent) };
+      if (!bySec[r.section]) { bySec[r.section] = { title: r.section, note: '', kind: '', recipes: [] }; sections.push(bySec[r.section]); }
+      bySec[r.section].recipes.push(r); recipes.push(r);
+      byId[r.id] = r; byTitle[norm(r.title)] = r;
+    });
+    sections.sort(function (a, b) { return a.title.localeCompare(b.title); });
+    R = { sections: sections, recipes: recipes, byId: byId, byTitle: byTitle };
+    renderRecipeIndex(); if (D) { renderMenu(); renderMeals(); }
+    if (state.recipe && R.byId[state.recipe]) showRecipe(state.recipe, true);
+    else if (state.recipe) { state.recipe = null; $('recView').innerHTML = '<div class="welcome">Pick a recipe.</div>'; }
+  });
+}
+
+function recipeForm(r) {
+  var x = r ? Store.getRecipes().filter(function (y) { return y.id === r.dbId; })[0] : {};
+  var secs = R.sections.map(function (s) { return s.title; });
+  openSheet('<h2>' + (r ? 'Edit recipe' : 'Add a recipe') + '</h2><p class="sub">One ingredient per line, and one step per line. A line ending in a colon becomes a little heading, like "For the sauce:".</p>' +
+    '<div class="lab">Name</div><input class="field" id="rTitle" value="' + esc(x.title || '') + '" placeholder="e.g. Shepherd\'s pie">' +
+    '<div class="row"><div><div class="lab">Section</div><input class="field" id="rSec" list="rSecs" value="' + esc(x.section || '') + '" placeholder="e.g. Dinners, Baking"></div>' +
+    '<div><div class="lab">From (optional)</div><input class="field" id="rSrc" value="' + esc(x.source || '') + '" placeholder="e.g. Grandma\'s card"></div></div>' +
+    '<datalist id="rSecs">' + secs.map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('') + '</datalist>' +
+    '<div class="lab">Ingredients</div><textarea class="field" id="rIng" style="min-height:150px">' + esc([].concat(x.ingredients || []).join('\n')) + '</textarea>' +
+    '<div class="lab">Method</div><textarea class="field" id="rMet" style="min-height:170px">' + esc([].concat(x.method || []).join('\n')) + '</textarea>' +
+    '<div class="lab">Notes (optional)</div><textarea class="field" id="rNote">' + esc(x.notes || '') + '</textarea>' +
+    '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>' + (r ? 'Save' : 'Add recipe') + '</button></div>', function (s) {
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        var title = $('rTitle').value.trim(); if (!title) { toast('The recipe needs a name.'); return; }
+        try {
+          var id = Store.saveRecipe({ id: x.id, title: title, section: $('rSec').value, source: $('rSrc').value.trim(),
+            ingredients: $('rIng').value.split('\n'), method: $('rMet').value.split('\n'), notes: $('rNote').value.trim() });
+          closeSheet(); state.recipe = 'r' + id;
+          loadRecipes().then(function () { showRecipe('r' + id); toast(title + (r ? ' saved.' : ' added.')); });
+        } catch (e) { toast(e.message, true); }
+      };
+      if (!r) setTimeout(function () { $('rTitle').focus(); }, 50);
+    });
+}
+
+function recipeDelete(r) {
+  confirmSheet('Delete ' + r.shortTitle + '?', 'It comes out of the recipe book. Meals that point to it just lose the link.', 'Delete', function () {
+    Store.deleteRecipe(r.dbId); state.recipe = null;
+    $('recView').innerHTML = '<div class="welcome">Pick a recipe.</div>';
+    $('recList').classList.add('show');
+    loadRecipes(); toast(r.shortTitle + ' deleted.');
+  });
+}
+
+function renderRecipeIndex() {
+  var q = norm($('recSearch').value);
+  var html = R.sections.map(function (s) {
+    var rs = s.recipes.filter(function (r) { return !q || r.text.indexOf(q) >= 0; });
+    if (!rs.length) return '';
+    var label = s.title.replace(/^Bread & Baking — /, '').replace(/ — .*$/, '');
+    return '<div class="rsec ' + s.kind + '">' + esc(label) + '</div>' + rs.map(function (r) {
+      return '<button class="ritem ' + r.kind + (state.recipe === r.id ? ' on' : '') + '" data-recipe="' + esc(r.id) + '">' + esc(r.shortTitle) + '</button>';
+    }).join('');
+  }).join('');
+  $('recIndex').innerHTML = html || '<p class="empty">' + (R.recipes.length ? 'Nothing matches.' : 'No recipes yet. Tap “Add a recipe” to start the book.') + '</p>';
+}
+
+/* Turn "10 mins", "1–1½ hours", "60–90 seconds" into tappable timers */
+var FR = { '½': 0.5, '¼': 0.25, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3 };
+function qn(s) {
+  if (!s) return NaN;
+  var m = String(s).match(/^(\d+)?\s*([½¼¾⅓⅔])?$/);
+  if (!m) return parseFloat(s);
+  return (m[1] ? parseInt(m[1], 10) : 0) + (m[2] ? FR[m[2]] : 0);
+}
+var TIME_RE = /(\d+\s*[½¼¾⅓⅔]?|[½¼¾])(?:\s*(?:–|-|to)\s*(\d+\s*[½¼¾⅓⅔]?|[½¼¾]))?\s*(hours?|hrs?|minutes?|mins?|seconds?|secs?)\b/gi;
+function addTimerChips(root, label) {
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  var nodes = []; while (walker.nextNode()) if (!walker.currentNode.parentNode.closest('.source, .story, .todo')) nodes.push(walker.currentNode);
+  nodes.forEach(function (node) {
+    var t = node.nodeValue; TIME_RE.lastIndex = 0; if (!TIME_RE.test(t)) return; TIME_RE.lastIndex = 0;
+    var frag = document.createDocumentFragment(), last = 0, m;
+    while ((m = TIME_RE.exec(t))) {
+      var lo = qn(m[1].replace(/\s+/g, '')), unit = m[3].toLowerCase();
+      var mult = unit[0] === 'h' ? 3600 : unit[0] === 'm' ? 60 : 1;
+      var secs = Math.round(lo * mult);
+      if (!secs || secs > 72 * 3600 || (mult === 3600 && lo > 12)) continue;
+      frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+      var b = document.createElement('button');
+      b.className = 'tchip'; b.dataset.secs = secs; b.dataset.label = label;
+      b.innerHTML = '<svg viewBox="0 0 16 16"><circle cx="8" cy="9" r="5.5"/><path d="M8 6.5V9l1.8 1.3M6.5 2h3"/></svg>' + esc(m[0]);
+      frag.appendChild(b); last = m.index + m[0].length;
+    }
+    if (!last) return;
+    frag.appendChild(document.createTextNode(t.slice(last)));
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+function showRecipe(id, keepScroll) {
+  var r = R.byId[id]; if (!r) return;
+  state.recipe = id;
+  var v = $('recView'); var top = v.scrollTop;
+  v.innerHTML = '<article class="rcard ' + r.kind + '"><div class="sec">' + esc(r.section) + '</div><h2>' + esc(r.shortTitle) + '</h2>' +
+    '<div class="tools"><button class="btn" data-reset>Start fresh</button>' +
+    (feat('shopping') ? '<button class="btn" data-shopadd>Add ingredients to shopping…</button>' : '') +
+    (r.editable ? '<button class="btn quiet" data-redit>Edit</button>' : '') + '<button class="btn quiet warn" data-rdel>Delete</button></div>' +
+    '<div class="rbody selectable">' + r.html + '</div></article>';
+  var body = v.querySelector('.rbody');
+  addTimerChips(body, r.shortTitle);
+  // first .source sits under the title
+  var src = body.querySelector('.source'); if (src) v.querySelector('.tools').before(src);
+  v.scrollTop = keepScroll ? top : 0;
+  renderRecipeIndex(); go('recipes');
+  $('recList').classList.remove('show');
+}
+
+function recipeTap(e) {
+  var chip = e.target.closest('.tchip');
+  if (chip) { e.stopPropagation(); startTimer(+chip.dataset.secs, chip.dataset.label + ' · ' + chip.textContent.trim()); return; }
+  if (e.target.closest('[data-reset]')) {
+    $('recView').querySelectorAll('li').forEach(function (li) { li.classList.remove('got', 'now', 'done'); });
+    $('recView').scrollTop = 0; return;
+  }
+  if (e.target.closest('[data-shopadd]')) { shopFromRecipe(); return; }
+  if (e.target.closest('[data-redit]')) { recipeForm(R.byId[state.recipe]); return; }
+  if (e.target.closest('[data-rdel]')) { recipeDelete(R.byId[state.recipe]); return; }
+  var li = e.target.closest('.rcard li'); if (!li) return;
+  if (li.parentNode.tagName === 'UL') { li.classList.toggle('got'); return; }
+  // method step: tap = "I'm on this one"; everything before it is done
+  var steps = Array.prototype.slice.call(li.parentNode.children);
+  var idx = steps.indexOf(li);
+  var wasNow = li.classList.contains('now');
+  steps.forEach(function (s, i) {
+    s.classList.remove('now', 'done');
+    if (i < idx) s.classList.add('done');
+  });
+  if (wasNow) { li.classList.add('done'); if (steps[idx + 1]) { steps[idx + 1].classList.add('now'); steps[idx + 1].scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+  else li.classList.add('now');
+}
+
+function shopFromRecipe() {
+  var r = R.byId[state.recipe]; if (!r) return;
+  var items = Array.prototype.map.call($('recView').querySelectorAll('.rcard ul li'), function (li) { return li.textContent.trim(); });
+  if (!items.length) { toast('No ingredient list on this one.'); return; }
+  var pre = Array.prototype.map.call($('recView').querySelectorAll('.rcard ul li'), function (li) { return !li.classList.contains('got'); });
+  openSheet('<h2>Add to shopping</h2><p class="sub">Tick what you need to buy for ' + esc(r.shortTitle) + '.</p><div class="picklist" id="ingPick">' +
+    items.map(function (t, i) { return '<button class="check" data-i="' + i + '"><span class="box"></span><span>' + esc(t) + '</span></button>'; }).join('') +
+    '</div><div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Add ticked</button></div>', function (s) {
+      s.querySelectorAll('.check').forEach(function (b) { b.onclick = function () { b.classList.toggle('on'); }; });
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        var pick = Array.prototype.filter.call(s.querySelectorAll('.check.on'), function () { return true; }).map(function (b) { return items[+b.dataset.i]; });
+        closeSheet(); if (!pick.length) return;
+        var p = Promise.resolve();
+        pick.forEach(function (it) { p = p.then(function () { return act('addShopping', it, '', ''); }); });
+        p.then(function () { toast('Added ' + pick.length + ' to the shopping list.'); });
+      };
+    });
+}
+
+/* =========================================================
+   TIMERS
+   ========================================================= */
+var timers = []; var actx = null;
+function audio() {
+  try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {}
+  return actx;
+}
+function beep() {
+  var a = audio(); if (!a) return;
+  [0, 0.28, 0.56].forEach(function (d) {
+    var o = a.createOscillator(), g = a.createGain();
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, a.currentTime + d);
+    g.gain.exponentialRampToValueAtTime(0.5, a.currentTime + d + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + d + 0.22);
+    o.connect(g); g.connect(a.destination); o.start(a.currentTime + d); o.stop(a.currentTime + d + 0.25);
+  });
+}
+function startTimer(secs, label) {
+  audio();
+  timers.push({ id: Date.now() + Math.random(), end: Date.now() + secs * 1000, label: label, ringing: false });
+  renderTimers(); toast('Timer started: ' + fmt(secs));
+}
+function fmt(s) {
+  s = Math.max(0, Math.round(s)); var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+  return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0');
+}
+function renderTimers() {
+  $('timers').innerHTML = timers.map(function (t) {
+    var left = (t.end - Date.now()) / 1000;
+    return '<div class="timer' + (t.ringing ? ' ring' : '') + '" data-id="' + t.id + '"><div class="tl">' + esc(t.label) + '</div>' +
+      '<div class="tv">' + (t.ringing ? 'Done!' : fmt(left)) + '</div>' +
+      (t.ringing ? '' : '<button data-plus title="Add a minute">+1</button>') + '<button data-stop title="Stop">✕</button></div>';
+  }).join('');
+}
+function timerLoop() {
+  var now = Date.now(), ring = false;
+  timers.forEach(function (t) { if (!t.ringing && t.end <= now) t.ringing = true; if (t.ringing) ring = true; });
+  if (timers.length) renderTimers();
+  if (ring && (!timerLoop._b || now - timerLoop._b > 1600)) { timerLoop._b = now; beep(); }
+}
+function timerPicker() {
+  var opts = [1, 3, 5, 10, 15, 20, 30, 45, 60, 90];
+  openSheet('<h2>Timer</h2><p class="sub">Tap a time to start it. Several can run at once.</p>' +
+    '<div class="chips">' + opts.map(function (m) { return '<button class="chip" data-m="' + m + '">' + (m < 60 ? m + ' min' : (m / 60) + (m === 60 ? ' hour' : ' hours')) + '</button>'; }).join('') + '</div>' +
+    '<div class="lab">Or set your own</div><div class="row"><input class="field" id="tMin" inputmode="numeric" placeholder="Minutes"><input class="field" id="tLabel" placeholder="What for? (optional)"></div>' +
+    '<div class="acts"><button class="btn" data-x>Close</button><button class="btn primary" data-y>Start</button></div>', function (s) {
+      s.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { closeSheet(); startTimer(+b.dataset.m * 60, ($('tLabel').value.trim() || 'Timer') + ' · ' + b.textContent); }; });
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        var m = parseFloat($('tMin').value); if (!m || m <= 0) { toast('How many minutes?'); return; }
+        closeSheet(); startTimer(m * 60, ($('tLabel').value.trim() || 'Timer') + ' · ' + m + ' min');
+      };
+    });
+}
+
+/* =========================================================
+   FREEZER
+   ========================================================= */
+var FCODES = [];
+function fname(code) { return (D && D.freezers && D.freezers[code]) || code || '—'; }
+function age(dateStr) {
+  if (!dateStr) return '';
+  var d = null, s = String(dateStr).trim();
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/) ; if (m) d = new Date(+m[1], +m[2] - 1, +m[3]);
+  else if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/))) d = new Date(+(m[3].length === 2 ? '20' + m[3] : m[3]), +m[1] - 1, +m[2]);
+  else if (/^\d{4}$/.test(s)) return { text: 'from ' + s, old: +s < new Date().getFullYear() };
+  if (!d || isNaN(d)) return { text: s, old: false };
+  var months = (Date.now() - d.getTime()) / (30.44 * 864e5);
+  var text = months < 1 ? 'this month' : months < 12 ? Math.floor(months) + ' mo' : (months / 12).toFixed(months < 24 ? 1 : 0).replace(/\.0$/, '') + ' yr';
+  return { text: text, old: months >= 6 };
+}
+function qtyText(q) {
+  var n = parseFloat(q); if (isNaN(n)) return q ? esc(q) : '?';
+  var whole = Math.floor(n), frac = n - whole;
+  var f = Math.abs(frac - 0.5) < 0.01 ? '½' : Math.abs(frac - 0.25) < 0.01 ? '¼' : Math.abs(frac - 0.75) < 0.01 ? '¾' : (frac ? String(Math.round(frac * 100) / 100).slice(1) : '');
+  return (whole || !f ? whole : '') + f;
+}
+
+function renderFreezer() {
+  var f = D.freezer; var q = norm($('frzSearch').value);
+  var total = 0;
+  if (FCODES.indexOf(state.frzFilter) < 0) state.frzFilter = 'ALL';
+  $('frzChips').innerHTML = FCODES.length < 2 ? '' : ['ALL'].concat(FCODES).map(function (c) {
+    return '<button class="chip' + (state.frzFilter === c ? ' on' : '') + '" data-f="' + c + '">' + (c === 'ALL' ? 'All freezers' : esc(fname(c))) + '</button>';
+  }).join('');
+  var html = f.categories.map(function (cat, ci) {
+    var items = cat.items.filter(function (it) {
+      return (state.frzFilter === 'ALL' || it.f === state.frzFilter) && (!q || norm(it.name + ' ' + it.comment).indexOf(q) >= 0);
+    });
+    total += items.length;
+    if (!items.length) return '';
+    return '<div class="fcat"><h2>' + esc(cat.name) + '</h2><span>' + items.length + '</span></div><div class="fgrid">' +
+      items.map(function (it) {
+        var a = age(it.date);
+        return '<button class="fitem" data-row="' + it.row + '" data-cat="' + ci + '">' +
+          '<div><div class="nm">' + esc(it.name) + '</div><div class="meta"><span class="ftag c' + (Math.max(0, FCODES.indexOf(it.f)) % 4) + '">' + esc(fname(it.f)) + '</span>' +
+          (a ? '<span class="' + (a.old ? 'old' : '') + '">' + esc(a.text) + '</span>' : '') +
+          (it.comment ? '<br>' + esc(it.comment) : '') + '</div></div>' +
+          '<div class="q"><b>' + qtyText(it.qty) + '</b><i>' + esc(it.unit) + '</i></div></button>';
+      }).join('') + '</div>';
+  }).join('');
+  $('frzList').innerHTML = html || '<p class="empty">Nothing matches' + (q ? ' "' + esc($('frzSearch').value) + '"' : '') + '.</p>';
+  $('frzSub').textContent = total + ' things' + (state.frzFilter === 'ALL' ? '' : ' in the ' + fname(state.frzFilter).toLowerCase()) + (f.updated ? ' · last updated ' + f.updated : '');
+  var rc = D.consumed || [];
+  $('frzRecent').innerHTML = rc.length ? '<h2>Recently used</h2><ul>' + rc.map(function (c) {
+    return '<li>' + esc(c.name) + ' <span>— ' + esc(qtyText(c.qty)) + ' ' + esc(c.unit) + ', ' + esc(c.date) + (c.comment ? ' · ' + esc(c.comment) : '') + '</span></li>';
+  }).join('') + '</ul>' : '';
+}
+
+function findItem(row) {
+  var hit = null;
+  D.freezer.categories.forEach(function (c) { c.items.forEach(function (it) { if (it.row === row) hit = it; }); });
+  return hit;
+}
+
+function freezerItem(row) {
+  var it = findItem(row); if (!it) return;
+  var have = parseFloat(it.qty); var known = !isNaN(have);
+  var amt = known ? Math.min(1, have) : 1;
+  var addShop = false;
+  openSheet('<h2>' + esc(it.name) + '</h2><p class="sub">' + esc(fname(it.f)) + ' · ' + (known ? qtyText(it.qty) + ' ' + esc(it.unit) : 'amount unknown') +
+    (it.comment ? ' · ' + esc(it.comment) : '') + '</p>' +
+    '<div class="lab">Taking out</div><div class="stepper"><button data-dn>−</button><div class="v" id="amt">' + qtyText(amt) + '</div><button data-up>+</button>' +
+    (known ? '<button class="chip" data-all style="width:auto;border-radius:24px;font-size:0.95rem">All of it</button>' : '') + '</div>' +
+    '<div class="row"><input class="field" id="useNote" placeholder="What for? (optional — e.g. dinner, with rice)"></div>' +
+    '<button class="check" id="alsoShop"><span class="box"></span>Add to shopping list too</button>' +
+    '<div class="acts"><button class="btn quiet" data-fix>Correct the count</button><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Take out</button></div>', function (s) {
+      function show() { $('amt').textContent = qtyText(amt); }
+      s.querySelector('[data-dn]').onclick = function () { amt = Math.max(0.5, amt - (amt > 1 ? 1 : 0.5)); show(); };
+      s.querySelector('[data-up]').onclick = function () { amt = amt + (amt < 1 ? 0.5 : 1); if (known) amt = Math.min(amt, have); show(); };
+      var all = s.querySelector('[data-all]'); if (all) all.onclick = function () { amt = have; show(); };
+      $('alsoShop').onclick = function () { addShop = !addShop; this.classList.toggle('on', addShop); };
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-fix]').onclick = function () { fixCount(it); };
+      s.querySelector('[data-y]').onclick = function () {
+        var note = $('useNote').value.trim();
+        function go2() {
+          closeSheet();
+          act('useFreezer', it.row, it.name, amt, note).then(function () {
+            if (addShop) return act('addShopping', it.name, '', '');
+          }).then(function () { toast(it.name + ': took out ' + qtyText(amt) + (addShop ? ', and added it to shopping' : '') + '.'); });
+        }
+        if (!known || amt >= have - 0.0001) {
+          confirmSheet('That\'s the last of it', it.name + ' will come off the freezer list. It shows under Recently used either way.', 'Take it out', go2);
+        } else go2();
+      };
+    });
+}
+
+function fixCount(it) {
+  var v = parseFloat(it.qty); if (isNaN(v)) v = 1;
+  openSheet('<h2>Correct the count</h2><p class="sub">For ' + esc(it.name) + '. This just fixes the number — nothing is logged as eaten.</p>' +
+    '<div class="stepper"><button data-dn>−</button><div class="v" id="cnt">' + qtyText(v) + '</div><button data-up>+</button><span style="color:var(--ink-light)">' + esc(it.unit) + '</span></div>' +
+    '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Save</button></div>', function (s) {
+      function show() { $('cnt').textContent = qtyText(v); }
+      s.querySelector('[data-dn]').onclick = function () { v = Math.max(0, v - (v > 1 ? 1 : 0.5)); show(); };
+      s.querySelector('[data-up]').onclick = function () { v = v + (v < 1 ? 0.5 : 1); show(); };
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        if (v === 0) confirmSheet('Remove ' + it.name + '?', 'A count of zero takes it off the list. Nothing is logged as eaten.', 'Remove', function () { act('setFreezerQty', it.row, it.name, 0); });
+        else { closeSheet(); act('setFreezerQty', it.row, it.name, v); }
+      };
+    });
+}
+
+function freezerAdd() {
+  var cats = D.freezer.categories.map(function (c) { return c.name; });
+  var f = state.frzFilter === 'ALL' ? FCODES[0] : state.frzFilter;
+  openSheet('<h2>Put something in</h2><p class="sub">It goes at the end of its heading, dated today.</p>' +
+    '<div class="lab">What is it</div><input class="field" id="aName" placeholder="e.g. Chilli con carne">' +
+    '<div class="row"><div><div class="lab">How many</div><input class="field" id="aQty" inputmode="decimal" value="1"></div>' +
+    '<div><div class="lab">Of what</div><input class="field" id="aUnit" placeholder="bags, portions, pkg…" list="units"></div></div>' +
+    '<datalist id="units"><option>bags</option><option>portions</option><option>pkg</option><option>pcs</option><option>tubs</option><option>trays</option><option>tubes</option></datalist>' +
+    '<div class="lab">Which freezer</div><div class="chips" id="aF">' + FCODES.map(function (c) { return '<button class="chip' + (c === f ? ' on' : '') + '" data-c="' + c + '">' + esc(fname(c)) + '</button>'; }).join('') + '</div>' +
+    '<div class="lab">Under which heading</div><select class="field" id="aCat">' + cats.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>' +
+    '<div class="lab">Comments</div><input class="field" id="aCom" placeholder="optional">' +
+    '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Put it in</button></div>', function (s) {
+      s.querySelectorAll('[data-c]').forEach(function (b) { b.onclick = function () { f = b.dataset.c; s.querySelectorAll('[data-c]').forEach(function (x) { x.classList.toggle('on', x === b); }); }; });
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        var name = $('aName').value.trim(); if (!name) { toast('What are you putting in?'); return; }
+        var args = [$('aCat').value, name, $('aQty').value.trim(), $('aUnit').value.trim(), f, $('aCom').value.trim()];
+        closeSheet(); act.apply(null, ['addFreezer'].concat(args)).then(function () { toast(name + ' is in.'); });
+      };
+      setTimeout(function () { $('aName').focus(); }, 50);
+    });
+}
+
+/* =========================================================
+   SHOPPING
+   ========================================================= */
+function renderShopping() {
+  var list = (D.shopping || []).slice();
+  var todo = list.filter(function (x) { return !x.done; }), got = list.filter(function (x) { return x.done; });
+  function row(x) {
+    var ex = [x.qty, x.where].filter(Boolean).join(' · ');
+    return '<button class="sitem' + (x.done ? ' done' : '') + '" data-row="' + x.row + '"><span class="box"></span><span class="it">' + esc(x.item) + '</span>' +
+      (ex ? '<span class="ex">' + esc(ex) + '</span>' : '') + '</button>';
+  }
+  $('shopList').innerHTML = (todo.length ? todo.map(row).join('') : '<p class="empty">Nothing on the list.</p>') +
+    (got.length ? '<div class="lab" style="margin:24px 0 8px;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-light)">Got it</div>' + got.map(row).join('') : '');
+  $('shopSub').textContent = todo.length ? todo.length + ' to get' : 'All done';
+  $('clearTicked').style.visibility = got.length ? 'visible' : 'hidden';
+}
+
+/* =========================================================
+   MEALS
+   ========================================================= */
+function renderMeals() {
+  var ms = (D.meals || []).slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+  $('mealList').innerHTML = ms.length ? ms.map(function (m) {
+    var r = recipeFor(m.name);
+    return '<button class="mcard" data-row="' + m.row + '"><div class="nm">' + esc(m.name) + '</div>' +
+      (m.contents ? '<div class="ct">' + esc(m.contents) + '</div>' : '') +
+      (m.notes ? '<div class="nt">' + esc(m.notes) + '</div>' : '') +
+      (r ? '<div class="rc">Recipe: ' + esc(r.shortTitle) + ' →</div>' : '') + '</button>';
+  }).join('') : '<p class="empty">No meals yet. Add the meals you like to make, and they\'ll show up in the menu.</p>';
+}
+
+function mealForm() {
+  var titles = R.recipes.filter(function (r) { return r.id !== 'bears-todo'; }).map(function (r) { return r.shortTitle; }).sort();
+  openSheet('<h2>Add a meal</h2><p class="sub">It\'ll appear in the menu straight away.</p>' +
+    '<div class="lab">Meal</div><input class="field" id="mName" placeholder="e.g. Bangers and mash">' +
+    '<div class="lab">What\'s in it</div><input class="field" id="mWhat" placeholder="e.g. Cumberland sausages, mash, peas, onion gravy">' +
+    (feat('recipes') && titles.length ? '<div class="lab">Recipe (optional)</div><select class="field" id="mRec"><option value="">— none —</option>' + titles.map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('') + '</select>' : '') +
+    '<div class="lab">Notes</div><input class="field" id="mNote" placeholder="optional">' +
+    '<div class="acts"><button class="btn" data-x>Cancel</button><button class="btn primary" data-y>Add meal</button></div>', function (s) {
+      s.querySelector('[data-x]').onclick = closeSheet;
+      s.querySelector('[data-y]').onclick = function () {
+        var n = $('mName').value.trim(); if (!n) { toast('The meal needs a name.'); return; }
+        var a = [n, $('mWhat').value.trim(), $('mRec') ? $('mRec').value : '', $('mNote').value.trim()];
+        closeSheet(); act.apply(null, ['addMeal'].concat(a)).then(function () { toast(n + ' added.'); });
+      };
+      setTimeout(function () { $('mName').focus(); }, 50);
+    });
+}
+
+function mealDetail(row) {
+  var m = (D.meals || []).filter(function (x) { return x.row === row; })[0]; if (!m) return;
+  var r = recipeFor(m.name);
+  openSheet('<h2>' + esc(m.name) + '</h2>' + (m.contents ? '<p class="sub">' + esc(m.contents) + '</p>' : '') +
+    (m.notes ? '<p style="font-style:italic;color:var(--ink-mid)">' + esc(m.notes) + '</p>' : '') +
+    '<div class="acts"><button class="btn quiet warn" data-del>Remove from list</button>' +
+    (r ? '<button class="btn" data-rec>Open recipe</button>' : '') + '<button class="btn primary" data-x>Done</button></div>', function (s) {
+      s.querySelector('[data-x]').onclick = closeSheet;
+      var rb = s.querySelector('[data-rec]'); if (rb) rb.onclick = function () { closeSheet(); showRecipe(r.id); };
+      s.querySelector('[data-del]').onclick = function () {
+        confirmSheet('Remove ' + m.name + '?', 'It comes off the meals list. Days already planned keep it.', 'Remove', function () { act('deleteMeal', m.row, m.name); });
+      };
+    });
+}
+
+/* =========================================================
+   SETTINGS — filled in once per kitchen, at setup
+   ========================================================= */
+function lrow(cls, vals, ph) {
+  return '<div class="lrow ' + cls + '">' + vals.map(function (v, i) {
+    return '<input class="field' + (ph[i].code ? ' code' : '') + '" value="' + esc(v) + '" placeholder="' + esc(ph[i].t) + '"' + (ph[i].code ? ' maxlength="4"' : '') + '>';
+  }).join('') + '<button class="rm" data-rmrow title="Remove">✕</button></div>';
+}
+
+function renderSettings(firstTime) {
+  var s = D.settings, bs = backupStatus();
+  var tier = s.tier, theme = s.theme, features = Object.assign({}, s.features);
+  var cookPh = [{ t: 'A name, or e.g. Takeaway' }];
+  var frzPh = [{ t: 'KF', code: true }, { t: 'e.g. Kitchen freezer' }];
+  var headPh = [{ t: 'e.g. Meat & Fish' }];
+  var html =
+    '<div class="page-head"><h1>' + (firstTime ? 'Set up this kitchen' : 'Settings') + '<small>' +
+      (firstTime ? 'Fill this in once. Everything stays on this tablet.' : 'Everything here stays on this tablet.') + '</small></h1></div>' +
+
+    '<div class="set-card"><h2>This kitchen</h2><p class="sub">The name shows in the tab title. Optional.</p>' +
+      '<input class="field" id="sHouse" value="' + esc(s.household) + '" placeholder="e.g. The Smiths">' +
+      '<div class="lab">Look</div><div class="chips" id="sTheme">' +
+        [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Follow the tablet']].map(function (t) { return '<button class="chip' + (theme === t[0] ? ' on' : '') + '" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') +
+      '</div></div>' +
+
+    '<div class="set-card"><h2>What this kitchen has</h2><p class="sub">Basic is the weekly menu, fridge, freezer and timers. Full adds the recipe book, a meals list and shopping.</p>' +
+      '<div class="tier" id="sTier">' +
+        '<button class="chip' + (tier === 'basic' ? ' on' : '') + '" data-v="basic">Basic<small>Menu · Fridge · Freezer · Timers</small></button>' +
+        '<button class="chip' + (tier === 'full' ? ' on' : '') + '" data-v="full">Full<small>Adds Recipes · Meals · Shopping</small></button>' +
+      '</div><div class="feat" id="sFeat">' +
+        [['recipes', 'Recipe book'], ['meals', 'Meals list'], ['shopping', 'Shopping list']].map(function (f) {
+          return '<button class="check' + (features[f[0]] ? ' on' : '') + '" data-f="' + f[0] + '"><span class="box"></span>' + f[1] + '</button>';
+        }).join('') + '</div></div>' +
+
+    '<div class="set-card"><h2>Who cooks</h2><p class="sub">These are the choices for “who\'s cooking?” on each dinner. A single name shows as “Sam\'s cooking”.</p>' +
+      '<div id="sCooks">' + s.cooks.map(function (c) { return lrow('lr-cook', [c], cookPh); }).join('') + '</div>' +
+      '<button class="btn quiet" data-addrow="sCooks">+ Add</button></div>' +
+
+    '<div class="set-card"><h2>Freezers</h2><p class="sub">A short code (up to 4 letters) and a name for each freezer.</p>' +
+      '<div id="sFrz">' + s.freezers.map(function (f) { return lrow('lr-frz', [f.code, f.name], frzPh); }).join('') + '</div>' +
+      '<button class="btn quiet" data-addrow="sFrz">+ Add a freezer</button></div>' +
+
+    '<div class="set-card"><h2>Freezer headings</h2><p class="sub">How the freezer list is grouped, in this order. Renaming one moves everything under it. A heading with “snack” or “lunch” in its name is offered for lunches.</p>' +
+      '<div id="sHeads">' + s.headings.map(function (h) { return '<div data-orig="' + esc(h) + '">' + lrow('lr-head', [h], headPh) + '</div>'; }).join('') + '</div>' +
+      '<button class="btn quiet" data-addrow="sHeads">+ Add a heading</button></div>' +
+
+    '<div class="acts" style="display:flex;justify-content:flex-end;gap:12px;margin:6px 0 26px"><button class="btn primary" id="sSave">' + (firstTime ? 'Done — start using it' : 'Save settings') + '</button></div>' +
+
+    (firstTime ? '' :
+    '<div class="set-card"><h2>Backup</h2><p class="sub">' + esc(bs.long) + ' Everything lives only on this tablet, so save a backup now and then and keep it somewhere safe.</p>' +
+      (bs.due ? '<p class="hint warn">Worth saving one today.</p>' : '') +
+      '<div class="acts"><button class="btn primary" id="bSave">Save a backup</button><button class="btn" id="bLoad">Restore from a backup…</button>' +
+      (feat('recipes') ? '<button class="btn" id="rImport">Import recipes from a file…</button>' : '') + '</div>' +
+      '<p class="hint">The backup lands in the tablet\'s Downloads folder. Restoring replaces everything on this screen with what\'s in the file.</p></div>' +
+    '<div class="set-card"><h2>Start over</h2><p class="sub">Wipes everything on this tablet: menu, fridge, freezer, recipes and settings.</p>' +
+      '<div class="acts"><button class="btn warn" id="bErase">Erase everything…</button></div></div>') +
+    '<input type="file" id="fileIn" accept=".json,application/json" style="display:none">' +
+    '<input type="file" id="recIn" accept=".html,.htm,text/html" style="display:none">';
+  $('settings').innerHTML = html;
+  var root = $('settings');
+
+  function chipGroup(id, cb) {
+    root.querySelectorAll('#' + id + ' [data-v]').forEach(function (b) {
+      b.onclick = function () { root.querySelectorAll('#' + id + ' [data-v]').forEach(function (x) { x.classList.toggle('on', x === b); }); cb(b.dataset.v); };
+    });
+  }
+  chipGroup('sTheme', function (v) { theme = v; });
+  chipGroup('sTier', function (v) {
+    tier = v; features = Object.assign({}, TIERS[v]);
+    root.querySelectorAll('#sFeat [data-f]').forEach(function (b) { b.classList.toggle('on', !!features[b.dataset.f]); });
+  });
+  root.querySelectorAll('#sFeat [data-f]').forEach(function (b) {
+    b.onclick = function () { features[b.dataset.f] = !features[b.dataset.f]; b.classList.toggle('on', features[b.dataset.f]); };
+  });
+  root.onclick = function (e) {
+    var rm = e.target.closest('[data-rmrow]'); if (rm) { var w = rm.closest('[data-orig]') || rm.closest('.lrow'); w.remove(); return; }
+    var add = e.target.closest('[data-addrow]');
+    if (add) {
+      var box = $(add.dataset.addrow);
+      var h = add.dataset.addrow === 'sCooks' ? lrow('lr-cook', [''], cookPh) : add.dataset.addrow === 'sFrz' ? lrow('lr-frz', ['', ''], frzPh) : '<div data-orig="">' + lrow('lr-head', [''], headPh) + '</div>';
+      box.insertAdjacentHTML('beforeend', h); var ins = box.lastElementChild.querySelector('input'); if (ins) ins.focus();
+    }
+  };
+
+  $('sSave').onclick = function () {
+    var vals = function (sel) { return Array.prototype.map.call(root.querySelectorAll(sel), function (r) { return Array.prototype.map.call(r.querySelectorAll('input'), function (i) { return i.value.trim(); }); }); };
+    var cooks = vals('#sCooks .lrow').map(function (v) { return v[0]; }).filter(Boolean);
+    var frz = vals('#sFrz .lrow').filter(function (v) { return v[0] || v[1]; });
+    var bad = frz.filter(function (v) { return !v[0] || !v[1]; })[0];
+    if (bad) { toast('Each freezer needs a code and a name.', true); return; }
+    frz = frz.map(function (v) { return { code: v[0].toUpperCase().replace(/\s+/g, ''), name: v[1] }; });
+    if (!frz.length) { toast('Add at least one freezer.', true); return; }
+    var codes = frz.map(function (f) { return f.code; });
+    if (codes.some(function (c, i) { return codes.indexOf(c) !== i; })) { toast('Two freezers have the same code.', true); return; }
+    var inUse = {}; D.freezer.categories.forEach(function (c) { c.items.forEach(function (it) { inUse[it.f] = (inUse[it.f] || 0) + 1; }); });
+    var gone = Object.keys(inUse).filter(function (c) { return c && codes.indexOf(c) < 0 && FCODES.indexOf(c) >= 0; })[0];
+    if (gone) { toast('The ' + fname(gone) + ' still has ' + inUse[gone] + ' thing' + (inUse[gone] === 1 ? '' : 's') + ' in it. Move or remove them first.', true); return; }
+    var heads = [], renames = [];
+    root.querySelectorAll('#sHeads [data-orig]').forEach(function (w) {
+      var v = w.querySelector('input').value.trim(), o = w.dataset.orig;
+      if (v && heads.indexOf(v) < 0) heads.push(v);
+      if (o && v && o !== v) renames.push([o, v]);
+    });
+    if (!heads.length) { toast('Add at least one freezer heading.', true); return; }
+    var stillUsed = D.freezer.categories.filter(function (c) {
+      return c.items.length && heads.indexOf(c.name) < 0 && !renames.some(function (r) { return r[0] === c.name; });
+    })[0];
+    if (stillUsed) { toast('“' + stillUsed.name + '” still has things under it. Move or remove them first.', true); return; }
+    try {
+      renames.forEach(function (r) { Store.renameHeading(r[0], r[1]); });
+      apply(Store.saveSettings({ household: $('sHouse').value.trim(), theme: theme, tier: tier, features: features,
+        cooks: cooks, freezers: frz, headings: heads, setupDone: true }));
+    } catch (e) { toast(e.message, true); return; }
+    if (firstTime) { document.body.classList.remove('welcome'); go('menu'); toast('All set. Enjoy your kitchen screen.'); }
+    else { renderSettings(); toast('Settings saved.'); }
+  };
+
+  if (firstTime) return;
+  $('bSave').onclick = saveBackup;
+  $('bLoad').onclick = function () { $('fileIn').click(); };
+  $('fileIn').onchange = function () { restoreFrom(this.files[0]); this.value = ''; };
+  if ($('rImport')) {
+    $('rImport').onclick = function () { $('recIn').click(); };
+    $('recIn').onchange = function () { importRecipeFile(this.files[0]); this.value = ''; };
+  }
+  $('bErase').onclick = function () {
+    confirmSheet('Erase everything?', 'This wipes the menu, fridge, freezer, recipes and settings from this tablet. It can\'t be undone without a backup.', 'Erase it all', function () {
+      apply(Store.eraseAll()); loadRecipes(); showWelcome();
+    }, true);
+  };
+}
+
+function saveBackup() {
+  var text = Store.backup();
+  var name = 'kitchen-backup-' + today() + '.json';
+  var blob = new Blob([text], { type: 'application/json' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  apply(Store.getAll()); if (state.page === 'settings') renderSettings();
+  toast('Backup saved as ' + name + '.');
+}
+
+function readFile(file) {
+  return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(r.result); }; r.onerror = rej; r.readAsText(file); });
+}
+
+function restoreFrom(file) {
+  if (!file) return;
+  readFile(file).then(function (text) {
+    confirmSheet('Restore this backup?', 'Everything on this screen is replaced with what\'s in ' + file.name + '.', 'Restore', function () {
+      try { apply(Store.restore(text)); loadRecipes(); document.body.classList.remove('welcome'); go('menu'); toast('Restored.'); }
+      catch (e) { toast(e.message, true); }
+    });
+  });
+}
+
+function importRecipeFile(file) {
+  if (!file) return;
+  readFile(file).then(function (html) {
+    var got = parseRecipes(html).recipes.filter(function (r) { return r.title && r.html.trim(); })
+      .map(function (r) { return { title: r.title, section: r.section, html: r.html }; });
+    if (!got.length) { toast('No recipes found in that file.', true); return; }
+    var n = Store.importRecipes(got);
+    loadRecipes(); toast(n ? 'Added ' + n + ' recipe' + (n === 1 ? '' : 's') + '.' : 'Those recipes are already in the book.');
+  });
+}
+
+function showWelcome() {
+  document.body.classList.add('welcome');
+  $('welcome').innerHTML = '<h1>Hello, kitchen.</h1>' +
+    '<p>This screen keeps the week\'s menu, what\'s in the fridge and freezer, and kitchen timers. Everything is saved on this tablet only. There are no accounts, and nothing is sent anywhere.</p>' +
+    '<div class="acts"><button class="btn primary" id="wSetup">Set up this kitchen</button><button class="btn" id="wRestore">Restore from a backup…</button></div>' +
+    '<input type="file" id="wFile" accept=".json,application/json" style="display:none">';
+  $('wSetup').onclick = function () { go('settings'); renderSettings(true); };
+  $('wRestore').onclick = function () { $('wFile').click(); };
+  $('wFile').onchange = function () { restoreFrom(this.files[0]); this.value = ''; };
+  go('welcome');
+}
+
+/* =========================================================
+   wiring
+   ========================================================= */
+function renderAll() {
+  if (!D) return;
+  renderMenu(); renderFreezer(); renderFridge(); renderShopping(); renderMeals();
+}
+
+document.addEventListener('click', function (e) {
+  var t = e.target;
+  var tab = t.closest('.tab[data-page]'); if (tab) { go(tab.dataset.page); return; }
+  if (t.closest('#timerBtn')) { timerPicker(); return; }
+  if (t.closest('#scrim')) { closeSheet(); return; }
+  var tm = t.closest('.timer');
+  if (tm) {
+    var id = +tm.dataset.id;
+    if (t.closest('[data-plus]')) timers.forEach(function (x) { if (x.id === id) x.end += 60000; });
+    else timers = timers.filter(function (x) { return x.id !== id; });
+    renderTimers(); return;
+  }
+  var rl = t.closest('[data-recipe]');
+  if (rl && !t.closest('#sheet') && !t.closest('.eat') && !t.closest('[data-cook]')) { e.stopPropagation(); showRecipe(rl.dataset.recipe); return; }
+  var eb = t.closest('.eat'); if (eb) { eatItem(+eb.dataset.day, eb.dataset.slot, eb.dataset.eat); return; }
+  var ck = t.closest('[data-cook]'); if (ck) { pickCook(+ck.dataset.cook); return; }
+  var slot = t.closest('#week [data-slot]'); if (slot) { pickMeal(+slot.dataset.day, slot.dataset.slot); return; }
+  var lc = t.closest('.lcard'); if (lc) { leftoverDetail(+lc.dataset.lo); return; }
+  if (t.closest('#loAdd')) { leftoverAdd(); return; }
+  if (t.closest('#clearWeek')) { confirmSheet('Clear the week?', 'Empties every lunch, dinner and note so you can plan fresh. The meals list isn\'t touched.', 'Clear it', function () { act('clearMenu'); }); return; }
+  if (t.closest('#recView')) { recipeTap(e); return; }
+  var fc = t.closest('#frzChips [data-f]'); if (fc) { state.frzFilter = fc.dataset.f; renderFreezer(); return; }
+  var fi = t.closest('.fitem'); if (fi) { freezerItem(+fi.dataset.row); return; }
+  if (t.closest('#frzAdd')) { freezerAdd(); return; }
+  var si = t.closest('.sitem');
+  if (si) {
+    var x = D.shopping.filter(function (s) { return s.row === +si.dataset.row; })[0];
+    if (x) { x.done = !x.done; renderShopping(); act('setShoppingDone', x.row, x.item, x.done); }
+    return;
+  }
+  if (t.closest('#clearTicked')) { act('clearTicked'); return; }
+  if (t.closest('#mealAdd')) { mealForm(); return; }
+  if (t.closest('#recAdd')) { recipeForm(null); return; }
+  var mc = t.closest('.mcard'); if (mc) { mealDetail(+mc.dataset.row); return; }
+});
+
+$('shopForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var it = $('shopItem').value.trim(); if (!it) return;
+  var q = $('shopQty').value.trim(), w = $('shopWhere').value.trim();
+  $('shopItem').value = ''; $('shopQty').value = ''; $('shopWhere').value = '';
+  act('addShopping', it, q, w);
+});
+$('recSearch').addEventListener('input', renderRecipeIndex);
+$('frzSearch').addEventListener('input', function () { if (D) renderFreezer(); });
+
+/* The clock, and a fresh look at the week when the day changes */
+var lastDay = today();
+tick(); setInterval(function () {
+  tick();
+  if (today() !== lastDay) { lastDay = today(); if (D && !sheetOpen()) renderAll(); }
+}, 10000);
+setInterval(timerLoop, 500);
+
+/* If another tab on this tablet changed something, catch up */
+window.addEventListener('storage', function (e) { if (e.key === KEY) { DB = null; refresh(); loadRecipes(); } });
+if (window.matchMedia) { try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { if (D) applyLook(); }); } catch (e) {} }
+
+/* Ask the browser not to tidy our data away when space runs low */
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+/* Work without Wi-Fi once it has loaded once */
+if ('serviceWorker' in navigator && location.protocol === 'https:') { navigator.serviceWorker.register('sw.js').catch(function () {}); }
+
+refresh().then(function () { if (Store.isNew()) showWelcome(); });
+loadRecipes();
+</script>
+</body>
+</html>
